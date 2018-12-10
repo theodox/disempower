@@ -63,4 +63,7 @@ def main(micropython_optimize=False):
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    optimize = 'WiPy' in sys.platform
+    print("server started (optimize:{})".format(optimize))
+    main(optimize)
