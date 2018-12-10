@@ -3,12 +3,97 @@ try:
 except:
     import socket
 
+import sys
+import traceback
+optimize = 'WiPy' in sys.platform
 
-CONTENT = b"""\
+
+ERROR = """\
+HTTP/1.0 500 Internal Server Error
+
+<html>
+<pre>
+{}
+</pre>
+
+<h3> request</h3>
+<pre>
+{}
+</pre>
+</html>
+"""
+
+CONTENT = """\
 HTTP/1.0 200 OK
 
-Hello #%d from MicroPython!
+<html>
+{}
+</hmtl>
 """
+
+NOT_FOUND = """\
+HTTP/1.0 404 Not Found
+
+<html>
+{} not found
+</html>
+"""
+
+ROUTES = dict()
+
+
+def not_found(req):
+    """
+    returns the 404 for a URL that is not in the routes table
+    """
+    return NOT_FOUND.format(req.get('url', 'URL')).encode('utf-8')
+
+
+def route(rt):
+    """
+    a flask-style route decorator for functions. Return results
+    as strings, the decorator will handle the rest
+    """
+    def deco(fn):
+        def wrapped(req):
+            try:
+                result = fn(req)
+                return CONTENT.format(result).encode('utf-8')
+            except Exception as e:
+                result = traceback.format_exc()
+                return ERROR.format(result, req).encode('utf-8')
+
+        ROUTES[rt] = wrapped
+        return wrapped
+    return deco
+
+
+def parse_request(stream):
+    results = {}
+    hdr_line = stream.readline().decode('utf-8')
+    if not hdr_line:
+        return results
+    method, url, protocol = hdr_line.split(' ')
+    results['method'] = method
+    results['protocol'] = protocol
+    try:
+        route, query = url.split('?')
+    except:
+        route, query = url, ''
+    results['url'] = url
+    results['query'] = query
+
+    while hdr_line not in ('', '\r\n'):
+        try:
+            hdr_line = stream.readline().decode('utf-8')
+            if len(hdr_line) > 2:
+                key, _, value = hdr_line.partition(":")
+                results[key] = value
+        except Exception as e:
+            results['error'] = str(e)
+            break
+
+    return results
 
 
 def main(micropython_optimize=False):
@@ -45,15 +130,11 @@ def main(micropython_optimize=False):
             # may take this shortcut to save resources.
             client_stream = client_sock
 
-        print("Request:")
-        req = client_stream.readline()
-        print(req)
-        while True:
-            h = client_stream.readline()
-            if h == b"" or h == b"\r\n":
-                break
-            print(h)
-        client_stream.write(CONTENT % counter)
+        req = parse_request(client_stream)
+        url = req.get('url')
+
+        handler = ROUTES.get(url, not_found)
+        client_stream.write(handler(req))
 
         client_stream.close()
         if not micropython_optimize:
@@ -62,8 +143,6 @@ def main(micropython_optimize=False):
         print()
 
 
-if __name__ == '__main__':
-    import sys
-    optimize = 'WiPy' in sys.platform
+def serve():
     print("server started (optimize:{})".format(optimize))
     main(optimize)
