@@ -77,10 +77,17 @@ def parse_request(stream):
     results['method'] = method
     results['protocol'] = protocol
     try:
-        route, query = url.split('?')
-    except:
-        route, query = url, ''
-    results['url'] = url
+        route, items = url.split('?')
+        query = {}
+        for kvp in items.split("&"):
+            try:
+                k, v = kvp.split("=")
+                query[k] = v
+            except ValueError:
+                query[kvp] = True
+    except ValueError:
+        route, query = url, {}
+    results['url'] = route
     results['query'] = query
 
     while hdr_line not in ('', '\r\n'):
