@@ -1,25 +1,40 @@
-try:
-    import usocket as socket
-except:
-    import socket
-
 import sys
-import traceback
-optimize = 'WiPy' in sys.platform
+is_micropython = 'WiPy' in sys.platform
 
+if not is_micropython:
+    import socket
+    partition = str.partition
+    from traceback import format_exc
+else:
+    import usocket as socket
+
+    def format_exc(limit=None, chain=True):
+        exc, val, _ = sys.exc_info()
+        return repr(exc) + '\n' + repr(val)
+
+    def partition(py_string, sep):
+        if not py_string:
+            return '', '', ''
+        idx = str.index(py_string, sep)
+        if idx <= 0:
+            return py_string, '', ''
+        else:
+            return py_string[:idx], py_string[idx], py_string[idx + 1:] if len(py_string) > idx else ''
 
 ERROR = """\
 HTTP/1.0 500 Internal Server Error
 
 <html>
+<h3>500 server error</h3>
+</div color='0x999999'>
 <pre>
-{}
+{err}
 </pre>
-
-<h3> request</h3>
-<pre>
-{}
-</pre>
+</div>
+<div>
+original request:
+{req}
+</div>
 </html>
 """
 
@@ -42,14 +57,14 @@ HTTP/1.0 404 Not Found
 ROUTES = dict()
 
 
-def not_found(req):
+def route_not_found(req):
     """
     returns the 404 for a URL that is not in the routes table
     """
     return NOT_FOUND.format(req.get('url', 'URL')).encode('utf-8')
 
 
-def route(rt):
+def route(rt, method="GET"):
     """
     a flask-style route decorator for functions. Return results
     as strings, the decorator will handle the rest
@@ -59,11 +74,11 @@ def route(rt):
             try:
                 result = fn(req)
                 return CONTENT.format(result).encode('utf-8')
-            except Exception as e:
-                result = traceback.format_exc()
-                return ERROR.format(result, req).encode('utf-8')
+            except Exception:
+                result = format_exc()
+                return ERROR.format(err=result, req=req).encode('utf-8')
 
-        ROUTES[rt] = wrapped
+        ROUTES[(rt, method)] = wrapped
         return wrapped
     return deco
 
@@ -74,15 +89,15 @@ def parse_request(stream):
     if not hdr_line:
         return results
     method, url, protocol = hdr_line.split(' ')
-    results['method'] = method
-    results['protocol'] = protocol
+    results['method'] = method.strip()
+    results['protocol'] = protocol.strip()
     try:
         route, items = url.split('?')
         query = {}
         for kvp in items.split("&"):
             try:
                 k, v = kvp.split("=")
-                query[k] = v
+                query[k] = v.strip()
             except ValueError:
                 query[kvp] = True
     except ValueError:
@@ -94,8 +109,8 @@ def parse_request(stream):
         try:
             hdr_line = stream.readline().decode('utf-8')
             if len(hdr_line) > 2:
-                key, _, value = hdr_line.partition(":")
-                results[key] = value
+                key, _, value = partition(hdr_line, ":")
+                results[key] = value.strip()
         except Exception as e:
             results['error'] = str(e)
             break
@@ -103,7 +118,7 @@ def parse_request(stream):
     return results
 
 
-def main(micropython_optimize=False):
+def main(is_micropython=False):
     s = socket.socket()
 
     # Binding to all interfaces - server will be accessible to other hosts!
@@ -116,40 +131,36 @@ def main(micropython_optimize=False):
     s.listen(5)
     print("Listening, connect your browser to http://<this_host>:8080/")
 
-    counter = 0
     while True:
-        res = s.accept()
-        client_sock = res[0]
-        client_addr = res[1]
-        print("Client address:", client_addr)
-        print("Client socket:", client_sock)
+        try:
+            client_socket, _ = s.accept()
 
-        if not micropython_optimize:
-            # To read line-oriented protocol (like HTTP) from a socket (and
-            # avoid short read problem), it must be wrapped in a stream (aka
-            # file-like) object. That's how you do it in CPython:
-            client_stream = client_sock.makefile("rwb")
-        else:
-            # .. but MicroPython socket objects support stream interface
-            # directly, so calling .makefile() method is not required. If
-            # you develop application which will run only on MicroPython,
-            # especially on a resource-constrained embedded device, you
-            # may take this shortcut to save resources.
-            client_stream = client_sock
+            if not is_micropython:
+                # cpython
+                client_stream = client_socket.makefile("rwb")
+            else:
+                # micropython
+                client_stream = client_socket
 
-        req = parse_request(client_stream)
-        url = req.get('url')
+            req = parse_request(client_stream)
+            if req and req['url']:  # skip malformed requests
+                handler = ROUTES.get(
+                    (req['url'], req['method']),
+                    route_not_found
+                )
+                client_stream.write(handler(req))
 
-        handler = ROUTES.get(url, not_found)
-        client_stream.write(handler(req))
+            client_stream.close()
+            if not is_micropython:
+                client_socket.close()
 
-        client_stream.close()
-        if not micropython_optimize:
-            client_sock.close()
-        counter += 1
-        print()
+        except Exception as e:
+            print("SERVER ERROR")
+            print(repr(e))
+
+            break
 
 
 def serve():
-    print("server started (optimize:{})".format(optimize))
-    main(optimize)
+    print("server started (optimize:{})".format(is_micropython))
+    main(is_micropython)
