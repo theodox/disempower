@@ -1,4 +1,9 @@
 from server import route, serve, is_micropython
+import machine
+import time
+
+CLOCK = machine.RTC()
+CLOCK.init((2019, 1, 1, 12, 0))
 
 if is_micropython:
     from machine import Pin
@@ -15,6 +20,37 @@ else:
 RELAY = Pin("P1", mode=Pin.OUT)
 RELAY(0)
 
+WEEKDAYS = 'Mon', 'Tues', 'Weds', 'Thurs', 'Fri', 'Sat', 'Sun'
+
+
+@route("/set_clock")
+def set_clock(request):
+    print(request)
+    global CLOCK
+    query = request.get('query')
+    if not query:
+        return "<h3>unable to parse query</h3>"
+
+    year = int(query['year'])
+    month = int(query['month'])
+    day = int(query['day'])
+    hour = int(query['hour'])
+    minute = int(query['min'])
+
+    CLOCK.init((year, month, day, hour, minute))
+
+    return (clock_time(request))
+
+
+@route("/time")
+def clock_time(request):
+
+    now = time.localtime()
+    day = WEEKDAYS[now[-2] % 6]
+    H = now[3]
+    M = now[4]
+    return '<h3>{}:{}:{}</h3>'.format(day, H, M)
+
 
 @route("/test")
 def test(request):
@@ -23,6 +59,7 @@ def test(request):
     for k, v in request.items():
         result.append(" ".join((k, ":", str(v))))
     return "<br>".join(result)
+
 
 @route("/on")
 def turn_on(request):

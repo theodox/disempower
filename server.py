@@ -21,6 +21,9 @@ else:
         else:
             return py_string[:idx], py_string[idx], py_string[idx + 1:] if len(py_string) > idx else ''
 
+
+ROUTES = dict()
+
 ERROR = """\
 HTTP/1.0 500 Internal Server Error
 
@@ -54,9 +57,6 @@ HTTP/1.0 404 Not Found
 </html>
 """
 
-ROUTES = dict()
-
-
 def route_not_found(req):
     """
     returns the 404 for a URL that is not in the routes table
@@ -84,10 +84,10 @@ def route(rt, method="GET"):
 
 
 def parse_request(stream):
-    results = {}
     hdr_line = stream.readline().decode('utf-8')
     if not hdr_line:
-        return results
+        return {}
+    results = {}
     method, url, protocol = hdr_line.split(' ')
     results['method'] = method.strip()
     results['protocol'] = protocol.strip()
@@ -143,7 +143,7 @@ def main(is_micropython=False):
                 client_stream = client_socket
 
             req = parse_request(client_stream)
-            if req and req['url']:  # skip malformed requests
+            if req and req.get('url'):  # skip malformed requests
                 handler = ROUTES.get(
                     (req['url'], req['method']),
                     route_not_found
@@ -157,6 +157,10 @@ def main(is_micropython=False):
         except Exception as e:
             print("SERVER ERROR")
             print(repr(e))
+            try:
+                print (e.data)
+            except:
+                pass
 
             break
 

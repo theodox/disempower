@@ -1,8 +1,10 @@
-
+CREDITS = {}
 INTERVALS = {}
+BLACKOUTS = {}
 
 
 def to_minutes(day, hour, minute):
+    '''week-day, hour, minute to minuts.  days are 0-7'''
     return day * 1440 + hour * 60 + minute
 
 
@@ -18,13 +20,13 @@ def create(start_tuple, end_tuple):
     return to_minutes(*start_tuple), to_minutes(*end_tuple)
 
 
-def add(user, interval):
+def _add(user, interval, dictionary):
     start, end = interval
-    if user not in INTERVALS:
-        INTERVALS[user] = []
+    if user not in dictionary:
+        dictionary[user] = []
 
     insert_at = 0
-    for idx, val in enumerate(INTERVALS[user]):
+    for idx, val in enumerate(dictionary[user]):
         valstart, valend = val
         if val == interval:
             return
@@ -33,39 +35,67 @@ def add(user, interval):
         else:
             break
 
-    INTERVALS[user].insert(insert_at, interval)
+    dictionary[user].insert(insert_at, interval)
+
+
+def _remove(user, interval, dictionary):
+    idx = dictionary[user].index(interval)
+    del dictionary[user][idx]
+
+
+def add_interval(user, interval):
+    _add(user, interval, INTERVALS)
+
+
+def add_blackout(user, interval):
+    _add(user, interval, BLACKOUTS)
 
 
 def remove(user, interval):
-    idx = INTERVALS[user].index(interval)
-    del INTERVALS[user][idx]
+    _remove(user, interval, INTERVALS)
+
+
+def remove_blackout(user, interval):
+    _remove(user, interval, BLACKOUTS)
+
+
+def add_credit(user, amount):
+    total = CREDITS.get(user, 0)
+    total += amount
+    CREDITS[user] = total
 
 
 def check(user, now_tuple):
+    """
+    returns positive # of minutes remaining,
+    0 if not in an active interval, 
+    negative number of minutes to the end of current blackout
+
+    """
     minutes = to_minutes(*now_tuple)
-    for i_start, i_end in INTERVALS[user]:
+    remaining = 0
+    for i_start, i_end in INTERVALS.get(user, []):
         if i_start <= minutes <= i_end:
-            return i_end - minutes
+            remaining = i_end - minutes
 
-    return 0
+    if remaining:
+        for b_start, b_end in BLACKOUTS.get(user, []):
+            if b_start <= minutes <= b_end:
+                return -1 * (b_end - minutes)
 
-
-def save():
-    with open('interval_db', 'w') as handle:
-        handle.write("{")
-        serialized = ["'{}':{}".format(name, INTERVALS[name]) for name in INTERVALS]
-        handle.write(", ".join(serialized))
-        handle.write("}\n")
+    user_total = CREDITS.get(user, 0)
+    return min(remaining, user_total)
 
 
-def load():
+def save(dictionary, filename):
+    with open(filename, 'w') as handle:
+        handle.writelines(str(dictionary))
+
+
+def load(filename):
     try:
-        with open('interval_db', 'r') as handle:
+        with open(filename, 'r') as handle:
             text = handle.read()
-
-        interval_data = eval(text)
-        INTERVALS.clear()
-        INTERVALS.update(interval_data)
-        return len(INTERVALS)
-    except IOError:
-        return 0
+            return eval(text)
+    except:
+        return dict()
