@@ -39,7 +39,7 @@ def set_clock(request):
 
     CLOCK.init((year, month, day, hour, minute))
 
-    return (clock_time(request))
+    return "<h3>clock set</h3>"
 
 
 @route("/time")
