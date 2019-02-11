@@ -1,10 +1,13 @@
+import time
+
 CREDITS = {}
 INTERVALS = {}
 BLACKOUTS = {}
 
+WEEK = 10080
 
 def to_minutes(day, hour, minute):
-    '''week-day, hour, minute to minuts.  days are 0-7'''
+    '''week-day, hour, minute to minuts.  days are 0-6'''
     return day * 1440 + hour * 60 + minute
 
 
@@ -65,14 +68,17 @@ def add_credit(user, amount):
     CREDITS[user] = total
 
 
-def check(user, now_tuple):
+def check(user):
     """
     returns positive # of minutes remaining,
     0 if not in an active interval, 
     negative number of minutes to the end of current blackout
 
     """
-    minutes = to_minutes(*now_tuple)
+
+
+    minutes = now_minutes()
+
     remaining = 0
     for i_start, i_end in INTERVALS.get(user, []):
         if i_start <= minutes <= i_end:
@@ -99,3 +105,17 @@ def load(filename):
             return eval(text)
     except:
         return dict()
+
+
+def TEST():
+    CREDITS['test'] = 30
+    began = (now_minutes() - 12) % WEEK
+    ends = (now_minutes() + 30) % WEEK
+
+
+def now_minutes():
+    now = time.localtime()
+    day = now[-2]
+    H = now[3]
+    M = now[4]
+    return to_minutes(day, H, M)
