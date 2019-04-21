@@ -1,11 +1,17 @@
-from bottle import route, run, Bottle, request
+from bottle import route, run, Bottle, request, template, TEMPLATE_PATH
 import interval
 import re
 import auth
 
+
 #------------------
 
 app = Bottle()
+TEMPLATE_PATH.insert(0, 'html')
+
+@app.route("/")
+def tester():
+    return template('base.tpl',  **{})
 
 
 @app.route("/login")
@@ -38,6 +44,9 @@ def check_user(user):
 
 @app.route('/credit/<user>/<amount:int>')
 def add_credit(user, amount):
+    if not auth.in_session(request):
+        return not_authorized()
+
     interval.add_credit(user, amount)
     return {
         'user': user,
@@ -73,6 +82,9 @@ def add_interval(user, numbers):
 
 @app.route("/blackout/<user>/<numbers>")
 def add_blackout(user, numbers):
+    if not auth.in_session(request):
+        return not_authorized()
+
     tokens = [int(k) for k in numbers.split(",")]
     if len(tokens) == 6:
         start = tokens[0:3]
@@ -96,6 +108,9 @@ def add_blackout(user, numbers):
 
 @app.route("/daily/<user>/<amount:int>")
 def set_daily(user, amount):
+    if not auth.in_session(request):
+        return not_authorized()
+
     interval.set_daily_allowance(user, amount)
     return {
         'user': user,
@@ -105,6 +120,9 @@ def set_daily(user, amount):
 
 @app.route("/weekly/<user>/<amount:int>")
 def set_weekly(user, amount):
+    if not auth.in_session(request):
+        return not_authorized()
+
     interval.set_weekly_allowance(user, amount)
     return {
         'user': user,
