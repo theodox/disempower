@@ -16,6 +16,7 @@ WEEKLY_BANK = defaultdict(int)  # add every week at 00:00 on Monday
 ACTIVE = defaultdict(int)
 
 LAST_TICK = -1
+LAST_TOPOFF = 17990
 
 WEEK = 10080
 DAY = 1440
@@ -125,7 +126,7 @@ def add_credit(user, amount):
     CREDITS[user] = total
 
 
-def check(user, minutes):
+def check(user):
     """
     returns positive # of minutes remaining,
     0 if not in an active interval,
@@ -133,16 +134,26 @@ def check(user, minutes):
 
     """
 
+    now_minute = tick(user)
+
+    """now = datetime.utcnow()
+            
+                local_time_offset = get_time_offset(now)
+            
+                now_minute = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
+                now_minute += local_time_offset
+                now_minute %= WEEK"""
+
     remaining = 0
 
     for i_start, i_end in itertools.chain.from_iterable(INTERVALS[user]):
-        if i_start <= minutes <= i_end:
-            remaining = max(remaining, i_end - minutes)
+        if i_start <= now_minute <= i_end:
+            remaining = max(remaining, i_end - now_minute)
 
     if remaining:
         for b_start, b_end in itertools.chain.from_iterable(BLACKOUTS[user]):
-            if b_start <= minutes <= b_end:
-                return -1 * (b_end - minutes)
+            if b_start <= now_minute <= b_end:
+                return -1 * (b_end - now_minute)
 
     user_total = CREDITS.get(user, 0)
 
@@ -154,16 +165,17 @@ def check(user, minutes):
 
 
 def tick(user):
+
+    activate(user)
     # always remember to set inactive users to -1!
 
+    now = datetime.utcnow()
+    daily_topoff(now)
+
+    local_time_offset = get_time_offset(now)
     # server runs UTC, but the minute conversion is hard-coded to
     # a simplified version of Pacific time : -7 during the
     # PST interval, -8 the rest of the time
-
-    now = datetime.utcnow()
-
-    local_time_offset = get_time_offset(now)
-
     now_minute = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
     now_minute += local_time_offset
     now_minute %= WEEK
@@ -171,25 +183,23 @@ def tick(user):
     recent = ACTIVE[user]
     if recent <= 0:
         ACTIVE[user] = now_minute
-        return
     else:
+
         delta = now_minute - ACTIVE[user]
         if delta < 0:
             delta += WEEK
+
         CREDITS[user] -= delta
         CREDITS[user] = max(0, CREDITS[user])
         ACTIVE[user] = now_minute
+
+    return now_minute
 
 
 def activate(user):
     for u in ACTIVE:
         if ACTIVE[u] != user:
             ACTIVE[u] = -1
-
-
-def deactivate():
-    for u in ACTIVE:
-        ACTIVE[u] = -1
 
 
 def save(filename):
@@ -207,28 +217,62 @@ def save(filename):
         pickle.dump(state, handle)
 
 
-def daily_topoff(day):
-    for u in DAILY_BANK:
-        CREDITS[u] += DAILY_BANK[u]
-        if day == 0:
-            CREDITS[u] += WEEKLY_BANK[u]
-        CREDITS[u] = min(CREDITS[u], CAPS[u])
+def daily_topoff(today_datetime):
+    global LAST_TOPOFF
 
+    current_day_timestamp = today_datetime.timestamp()
+    current_day_serial = int(current_day_timestamp // 86400)
 
-def gift(user, amount):
-    CREDITS[user] += amount
+    for d in range(LAST_TOPOFF + 1, current_day_serial + 1):
+        next_day = datetime.utcfromtimestamp(d * 86400)
+        print (">", next_day)
+        local_time_offset = get_time_offset(next_day)
+        now_minute = to_minutes(next_day.isoweekday() %
+                                7, next_day.hour, next_day.minute)
+        now_minute += local_time_offset
+        now_minute %= WEEK
+        day_number = now_minute // DAY
+        print ("topoff", d, day_number)
+
+        for u in DAILY_BANK:
+            CREDITS[u] += DAILY_BANK.get(u, 0)
+        if day_number == 0:
+            CREDITS[u] += WEEKLY_BANK.get(u, 0)
+        CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
+
+    LAST_TOPOFF = current_day_serial
 
 
 def set_cap(user, amount):
     CAPS[user] = amount
 
 
+def get_cap(user):
+    return CAPS.get(user, 180)
+
+
 def set_daily_allowance(user, amount):
     DAILY_BANK[user] = amount
 
 
+def get_daily_allowance(user):
+    return DAILY_BANK.get(user)
+
+
 def set_weekly_allowance(user, amount):
     WEEKLY_BANK[user] = amount
+
+
+def get_weekly_allowance(user):
+    return WEEKLY_BANK.get(user)
+
+
+def set_credits(user, amount):
+    CREDITS[user] = amount
+
+
+def get_credits(user):
+    return credits.get(user, 0)
 
 
 def load(filename):
@@ -271,9 +315,12 @@ if __name__ == '__main__':
     now = datetime.now()
     confirm = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
     print ("confirm", confirm)
-
-    CREDITS['nicky'] = 32
+    CAPS['nicky'] = 120
+    CREDITS['nicky'] = 0
     ACTIVE['nicky'] = -1
+    DAILY_BANK['nicky'] = 10
+    WEEKLY_BANK['nicky'] = 5
+    DAILY_BANK['helen'] = 7
 
     add_interval('nicky', (0, 9, 30), (0, 10, 30))
     add_interval('nicky', (6, 20, 0), (0, 1, 0))

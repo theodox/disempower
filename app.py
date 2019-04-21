@@ -1,87 +1,109 @@
-from server import route, serve, is_micropython
-import machine
-import time
+from bottle import route, run, Bottle
+import interval
+import re
 
-CLOCK = machine.RTC()
-CLOCK.init((2019, 1, 1, 12, 0))
-
-if is_micropython:
-    from machine import Pin
-else:
-    class Pin (object):
-        OUT = 1
-
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __call__(self, val):
-            pass
-
-RELAY = Pin("P1", mode=Pin.OUT)
-RELAY(0)
-
-WEEKDAYS = 'Mon', 'Tues', 'Weds', 'Thurs', 'Fri', 'Sat', 'Sun'
+app = Bottle()
 
 
-@route("/set_clock")
-def set_clock(request):
-    print(request)
-    global CLOCK
-    query = request.get('query')
-    if not query:
-        return "<h3>unable to parse query</h3>"
+def list_filter(config):
+    ''' Matches a comma separated list of numbers. '''
+    delimiter = config or ','
+    regexp = r'\d+(%s\d)*' % re.escape(delimiter)
 
-    year = int(query['year'])
-    month = int(query['month'])
-    day = int(query['day'])
-    hour = int(query['hour'])
-    minute = int(query['min'])
+    def to_python(match):
+        return map(int, match.split(delimiter))
 
-    CLOCK.init((year, month, day, hour, minute))
+    def to_url(numbers):
+        return delimiter.join(map(str, numbers))
 
-    return "<h3>clock set</h3>"
+    return regexp, to_python, to_url
 
 
-@route("/time")
-def clock_time(request):
-
-    now = time.localtime()
-    day = WEEKDAYS[now[-2] % 6]
-    H = now[3]
-    M = now[4]
-    return '<h3>{}:{}:{}</h3>'.format(day, H, M)
+app.router.add_filter('list', list_filter)
 
 
-@route("/test")
-def test(request):
-    result = []
-    result.append("<h3>request:</h3>")
-    for k, v in request.items():
-        result.append(" ".join((k, ":", str(v))))
-    return "<br>".join(result)
+@app.route('/check/<user>')
+def check_user(user):
+    return {
+        'user': interval.check(user),
+        'credits': interval.CREDITS.get(user, 0)
+    }
 
 
-@route("/on")
-def turn_on(request):
-    print("power ON")
-    RELAY(1)
-    return "<h1>power on</h1>"
+@app.route('/credit/<user>/<amount:int>')
+def add_credit(user, amount):
+    interval.add_credit(user, amount)
+    return {
+        'user': user,
+        'credits': interval.CREDITS.get(user, 0)
+    }
 
 
-@route("/off")
-def turn_off(request):
-    print("power OFF")
-    RELAY(0)
-    return "<h1>power off</h1>"
+@app.route("/interval/<user>/<numbers>")
+def add_interval(user, numbers):
+    tokens = [int(k) for k in numbers.split(",")]
+    if len(tokens) == 6:
+        start = tokens[0:3]
+        end = tokens[3:6]
+        interval.add_interval(user, start, end)
+
+        return {
+            'user': user,
+            'start': start,
+            'end': end,
+            'succeed': True,
+            'result': interval.INTERVALS.get(user)
+        }
+    else:
+        return {
+            'user': user,
+            'succeed': False,
+            'result': interval.INTERVALS.get(user)
+        }
 
 
-@route("/stop")
-def turn_off(request):
-    try:
-        print("server shutdown requested")
-        return "server shutting down"
-    finally:
-        raise SystemExit()
+@app.route("/blackout/<user>/<numbers>")
+def add_blackout(user, numbers):
+    tokens = [int(k) for k in numbers.split(",")]
+    if len(tokens) == 6:
+        start = tokens[0:3]
+        end = tokens[3:6]
+        interval.add_blackout(user, start, end)
+
+        return {
+            'user': user,
+            'start': start,
+            'end': end,
+            'succeed': True,
+            'result': interval.BLACKOUTS.get(user)
+        }
+    else:
+        return {
+            'user': user,
+            'succeed': False,
+            'result': interval.BLACKOUTS.get(user)
+        }
 
 
-serve()
+@app.route("/daily/<user>/<amount:int>")
+def set_daily(user, amount):
+    interval.set_daily_allowance(user, amount)
+    return {
+        'user': user,
+        'daily': interval.get_daily_allowance(user)
+    }
+
+
+@app.route("/weekly/<user>/<amount:int>")
+def set_weekly(user, amount):
+    interval.set_weekly_allowance(user, amount)
+    return {
+        'user': user,
+        'weekly': interval.get_weekly_allowance(user)
+    }
+
+
+interval.DAILY_BANK['nicky'] = 10
+interval.add_interval('nicky', (6, 15, 0), (6, 23, 0))
+
+app.run(host='localhost', port=8080)
