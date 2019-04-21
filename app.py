@@ -103,6 +103,26 @@ def set_weekly(user, amount):
     }
 
 
+@app.route("/status/<user>")
+def status(user):
+
+    available = interval.check(user)
+    daily = interval.get_daily_allowance(user)
+    weekly = interval.get_weekly_allowance(user)
+    credits = interval.get_credits(user)
+    cap = interval.get_cap(user)
+    intevals = interval.get_intervals(user)
+
+    return {'available': available,
+            'daily': daily,
+            'weekly': weekly,
+            'credits': credits,
+            'cap': cap,
+            'intevals': intevals,
+            'user': user
+            }
+
+
 interval.DAILY_BANK['nicky'] = 10
 interval.add_interval('nicky', (6, 15, 0), (6, 23, 0))
 

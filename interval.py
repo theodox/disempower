@@ -65,9 +65,9 @@ def from_minutes(mins):
     """
     converts a minute value into a day-hour-minute tuple
     """
-    day = mins % 1440
+    day = mins // 1440
     remainder = mins - (day * 1440)
-    hour = remainder % 60
+    hour = remainder // 60
     minute = remainder - (hour * 60)
     return day, hour, minute
 
@@ -272,7 +272,25 @@ def set_credits(user, amount):
 
 
 def get_credits(user):
-    return credits.get(user, 0)
+    return CREDITS.get(user, 0)
+
+
+def get_intervals(user):
+    user_intervals = INTERVALS.get(user)
+
+    days = 'M', 'T', 'W', 'Th', 'F', 'Sa', 'Su'
+
+    def fmt(timetuple):
+        d, h, m = timetuple
+        return "{} {:02d}{:02d}".format(days[d], h, m)
+
+    result = []
+    for i_start, i_end in itertools.chain.from_iterable(INTERVALS[user]):
+        start_tuple = from_minutes(i_start)
+        end_tuple = from_minutes(i_end)
+        result.append(fmt(start_tuple) + " -- " + fmt(end_tuple))
+
+    return result
 
 
 def load(filename):
