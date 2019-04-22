@@ -6,6 +6,8 @@ import configparser
 _cfg = configparser.ConfigParser()
 _cfg.read('conf.ini')
 
+SECRET = _cfg['auth']['secret']
+
 
 def blake(bytes):
     h = hashlib.blake2b()
@@ -13,8 +15,7 @@ def blake(bytes):
     return h.hexdigest()
 
 
-SESSIONS = dict()
-TIMEOUT = datetime.timedelta(minutes=15)
+SESSIONS = {}
 
 
 def validate(user, password):
@@ -28,19 +29,17 @@ def validate(user, password):
 def login(user, password):
     if validate(user, password):
         SESSIONS.clear()
-        expires = datetime.datetime.now()
-        expires += TIMEOUT
-        key = str(int(expires.timestamp())) + user
+        timeval = datetime.datetime.now().timestamp()
+        key = str(int(timeval)) + "%?" + user
         token = blake(key.encode('utf-8'))
-        SESSIONS[token] = expires
-        return token
+        SESSIONS[token] = user
+        return token, SECRET
     return None
 
 
 def logout(request):
 
-    session_id = request.POST.get('session', request.GET.get('session', None))
-
+    session_id = request.get_cookie('session', secret=SECRET)
     print ("logout", session_id)
     try:
         del SESSIONS[session_id]
@@ -49,17 +48,6 @@ def logout(request):
 
 
 def in_session(request):
-    session_id = request.POST.get('session', request.GET.get('session', None))
-
-    print ("session id", session_id)
-    timeout = SESSIONS.get(session_id, False)
-    if not session_id or not timeout:
-        print ("no session")
-        return 0
-    if timeout > datetime.datetime.now():
-        print ("valid session")
-        return 1
-    else:
-        print ("session timed out")
-        del SESSIONS[session_id]
-        return -1
+    session_id = request.get_cookie('session', secret=SECRET)
+    print ("CHEK", session_id)
+    return SESSIONS.get(session_id, None)

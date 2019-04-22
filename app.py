@@ -1,4 +1,4 @@
-from bottle import route, run, Bottle, request, template, TEMPLATE_PATH
+from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response
 import interval
 import re
 import auth
@@ -9,9 +9,13 @@ import auth
 app = Bottle()
 TEMPLATE_PATH.insert(0, 'html')
 
+
+SESSION_TIMEOUT = 300
+
+
 @app.route("/")
 def tester():
-    return template('base.tpl',  **{})
+    return template('base.tpl', **{})
 
 
 @app.route("/login")
@@ -19,7 +23,9 @@ def tester():
 def temp_login():
     user = request.GET.get('user')
     password = request.GET.get('pwd')
-    sesh = auth.login(user, password)
+    sesh, secret = auth.login(user, password)
+    response.set_cookie('session', sesh, secret=secret,
+                        max_age=SESSION_TIMEOUT)
     return sesh
 
 
@@ -31,7 +37,7 @@ def temp_logout():
 
 @app.route('/forbidden')
 def not_authorized():
-    return "You must be logged in to access this function"
+    abort(401, "You must be logged in to view this page.")
 
 
 @app.route('/check/<user>')
