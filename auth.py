@@ -34,7 +34,7 @@ def login(user, password):
         token = blake(key.encode('utf-8'))
         SESSIONS[token] = user
         return token, SECRET
-    return None
+    return None, SECRET
 
 
 def logout(request):

@@ -274,6 +274,9 @@ def set_credits(user, amount):
 def get_credits(user):
     return CREDITS.get(user, 0)
 
+def get_users():
+    return INTERVALS.keys()
+
 
 def get_intervals(user):
     user_intervals = INTERVALS.get(user)

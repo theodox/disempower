@@ -1,4 +1,4 @@
-from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response
+from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response, redirect
 import interval
 import re
 import auth
@@ -13,16 +13,17 @@ TEMPLATE_PATH.insert(0, 'html')
 SESSION_TIMEOUT = 300
 
 
-@app.route("/")
+@app.get("/")
 def tester():
-    return template('base.tpl', **{})
+    return template('frontpage.tpl')
 
 
 @app.route("/login")
 @app.route("/login", method="POST")
 def temp_login():
-    user = request.GET.get('user')
-    password = request.GET.get('pwd')
+    user = request.forms.get('username') or ""
+    password = request.forms.get('password') or ""
+    
     sesh, secret = auth.login(user, password)
     response.set_cookie('session', sesh, secret=secret,
                         max_age=SESSION_TIMEOUT)
@@ -33,6 +34,15 @@ def temp_login():
 @app.route('/logout', method="POST")
 def temp_logout():
     auth.logout(request)
+    redirect("/")
+
+
+@app.route('/credits')
+def credits():
+    if not auth.in_session(request):
+        return not_authorized()
+
+    return template('credits.tpl')
 
 
 @app.route('/forbidden')
