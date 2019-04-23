@@ -49,5 +49,6 @@ def logout(request):
 
 def in_session(request):
     session_id = request.get_cookie('session', secret=SECRET)
-    print ("CHEK", session_id)
     return SESSIONS.get(session_id, None)
+
+ 

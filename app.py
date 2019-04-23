@@ -1,4 +1,4 @@
-from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response, redirect
+from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response, redirect, static_file
 import interval
 import re
 import auth
@@ -15,7 +15,10 @@ SESSION_TIMEOUT = 300
 
 @app.get("/")
 def tester():
-    return template('frontpage.tpl')
+    if auth.in_session(request):
+        return redirect('/status')
+    else:
+        return template('frontpage.tpl')
 
 
 @app.route("/login")
@@ -23,11 +26,16 @@ def tester():
 def temp_login():
     user = request.forms.get('username') or ""
     password = request.forms.get('password') or ""
-    
+
     sesh, secret = auth.login(user, password)
     response.set_cookie('session', sesh, secret=secret,
                         max_age=SESSION_TIMEOUT)
-    return sesh
+    return redirect("/")
+
+
+@app.route('/<filename:path>')
+def send_static(filename):
+    return static_file(filename, root='html/')
 
 
 @app.route('/logout')
@@ -146,24 +154,26 @@ def set_weekly(user, amount):
     }
 
 
-@app.route("/status/<user>")
-def status(user):
+@app.route("/status")
+def status():
+    context = {}
+    for user in interval.get_users():
+        available = interval.check(user)
+        daily = interval.get_daily_allowance(user)
+        weekly = interval.get_weekly_allowance(user)
+        credits = interval.get_credits(user)
+        cap = interval.get_cap(user)
+        intevals = interval.get_intervals(user)
 
-    available = interval.check(user)
-    daily = interval.get_daily_allowance(user)
-    weekly = interval.get_weekly_allowance(user)
-    credits = interval.get_credits(user)
-    cap = interval.get_cap(user)
-    intevals = interval.get_intervals(user)
-
-    return {'available': available,
-            'daily': daily,
-            'weekly': weekly,
-            'credits': credits,
-            'cap': cap,
-            'intevals': intevals,
-            'user': user
-            }
+        context[user] = {'available': available,
+                         'daily': daily,
+                         'weekly': weekly,
+                         'credits': credits,
+                         'cap': cap,
+                         'intevals': intevals,
+                         'user': user
+                         }
+    return template('status.tpl', context = context)
 
 
 interval.DAILY_BANK['nicky'] = 10
