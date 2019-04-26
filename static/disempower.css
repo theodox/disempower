@@ -12,3 +12,12 @@
     display: flex;
     float: none;
 }
+
+.cal {
+    width: 100%
+    margin: 4px;
+    padding: 4px;
+    align-items: center;
+    justify-content: space-around;
+    display: flex;
+}

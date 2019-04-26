@@ -2,28 +2,47 @@ from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, 
 import interval
 import re
 import auth
+import json
 
 
 #------------------
 
 app = Bottle()
-TEMPLATE_PATH.insert(0, 'html')
+#TEMPLATE_PATH.insert(0, 'html')
 
 
 SESSION_TIMEOUT = 300
 
 
+def authorized():
+    if not auth.in_session(request):
+        return abort(401, "You must be logged in to view this page.")
+    else:
+        return None
+    # use 'returm authorized() or xxxx'
+
+
+# this is for static files, like CSS
+@app.route('/<filename:path>')
+def send_static(filename):
+    return static_file(filename, root='static/')
+
+# landing page is login if we're not logged in,
+# otherwise status
+
+
 @app.get("/")
-def tester():
+def landing():
     if auth.in_session(request):
         return redirect('/status')
     else:
         return template('frontpage.tpl')
 
+# login dialog
 
-@app.route("/login")
+
 @app.route("/login", method="POST")
-def temp_login():
+def login_dialog():
     user = request.forms.get('username') or ""
     password = request.forms.get('password') or ""
 
@@ -33,29 +52,16 @@ def temp_login():
     return redirect("/")
 
 
-@app.route('/<filename:path>')
-def send_static(filename):
-    return static_file(filename, root='html/')
-
-
+# log out and return to login screen
 @app.route('/logout')
-@app.route('/logout', method="POST")
-def temp_logout():
+def logout():
     auth.logout(request)
     redirect("/")
 
 
 @app.route('/credits')
 def credits():
-    if not auth.in_session(request):
-        return not_authorized()
-
-    return template('credits.tpl')
-
-
-@app.route('/forbidden')
-def not_authorized():
-    abort(401, "You must be logged in to view this page.")
+    return authorized() or template('credits.tpl')
 
 
 @app.route('/check/<user>')
@@ -68,8 +74,10 @@ def check_user(user):
 
 @app.route('/credit/<user>/<amount:int>')
 def add_credit(user, amount):
-    if not auth.in_session(request):
-        return not_authorized()
+
+    result = authorized()
+    if result:
+        return result
 
     interval.add_credit(user, amount)
     return {
@@ -80,8 +88,9 @@ def add_credit(user, amount):
 
 @app.route("/interval/<user>/<numbers>")
 def add_interval(user, numbers):
-    if not auth.in_session(request):
-        return not_authorized()
+    result = authorized()
+    if result:
+        return result
 
     tokens = [int(k) for k in numbers.split(",")]
     if len(tokens) == 6:
@@ -106,8 +115,9 @@ def add_interval(user, numbers):
 
 @app.route("/blackout/<user>/<numbers>")
 def add_blackout(user, numbers):
-    if not auth.in_session(request):
-        return not_authorized()
+    result = authorized()
+    if result:
+        return result
 
     tokens = [int(k) for k in numbers.split(",")]
     if len(tokens) == 6:
@@ -132,8 +142,9 @@ def add_blackout(user, numbers):
 
 @app.route("/daily/<user>/<amount:int>")
 def set_daily(user, amount):
-    if not auth.in_session(request):
-        return not_authorized()
+    result = authorized()
+    if result:
+        return result
 
     interval.set_daily_allowance(user, amount)
     return {
@@ -144,8 +155,9 @@ def set_daily(user, amount):
 
 @app.route("/weekly/<user>/<amount:int>")
 def set_weekly(user, amount):
-    if not auth.in_session(request):
-        return not_authorized()
+    result = authorized()
+    if result:
+        return result
 
     interval.set_weekly_allowance(user, amount)
     return {
@@ -173,10 +185,12 @@ def status():
                          'intevals': intevals,
                          'user': user
                          }
-    return template('status.tpl', context = context)
+    return template('status.tpl', context=json.dumps(context), M11='<button>Nicky</button>', included='<h1>Test</h1>' )
 
 
 interval.DAILY_BANK['nicky'] = 10
 interval.add_interval('nicky', (6, 15, 0), (6, 23, 0))
+interval.WEEKLY_BANK['helen'] = 60
+interval.add_interval('helen', (2,15,30), (2, 20,0))
 
 app.run(host='localhost', port=8080)
