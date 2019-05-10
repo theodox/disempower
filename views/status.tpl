@@ -1,6 +1,6 @@
 % rebase('base.tpl', title='Disempower Login')
 % include('header.tpl', title='Disempower Login')
-
+ 
 <div class="card-body">
 
 <div class="container-fluid">
@@ -341,6 +341,8 @@
 <div class="cal-cell col-xs-1">{{!SU23}}</div>
  </div >
  <div height = 256px width=100%><canvas id="fred" width=100% height=100%></canvas></div>
- <script type="text/javascript">draw_calendar('x'); console.log({{!context}} )</script>
+
+ <script type="module">import * as hello from '/static/dummy.js'; window.hello = hello;</script>
+
 
  </div>

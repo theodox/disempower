@@ -22,10 +22,18 @@ def authorized():
     # use 'returm authorized() or xxxx'
 
 
+@app.get("/static/<filepath:re:.*\.css>")
+def css(filepath):
+    return static_file(filepath, root="static")
+
+@app.get("/static/<filepath:re:.*\.js>")
+def js(filepath):
+    return static_file(filepath, root="__target__")
+'''
 # this is for static files, like CSS
 @app.route('/<filename:path>')
 def send_static(filename):
-    return static_file(filename, root='static/')
+    return static_file(filename, root='__target__')'''
 
 # landing page is login if we're not logged in,
 # otherwise status
