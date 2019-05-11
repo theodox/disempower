@@ -24,7 +24,7 @@
     <![endif]-->
 
  
-   <script type="module">import * as disempower from '/static/dummy.js'; window.disempower = disempower;</script>
+   <script type="module">import * as disempower from '/static/client_lib.js'; window.disempower = disempower;</script>
   </head>
   <body>
       <div class="container">

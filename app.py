@@ -193,7 +193,7 @@ def status():
                          'intevals': intevals,
                          'user': user
                          }
-    return template('status.tpl', context=json.dumps(context), M11='<button>Nicky</button>', included='<h1>Test</h1>' )
+    return template('status.tpl', context=json.dumps(context))
 
 
 interval.DAILY_BANK['nicky'] = 10

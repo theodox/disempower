@@ -21,3 +21,8 @@
     justify-content: space-around;
     display: flex;
 }
+
+canvas {
+  width: 100%;
+  height: auto;
+}
