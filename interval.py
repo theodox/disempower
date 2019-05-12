@@ -274,27 +274,31 @@ def set_credits(user, amount):
 def get_credits(user):
     return CREDITS.get(user, 0)
 
+
 def get_users():
     return INTERVALS.keys()
 
 
 def get_intervals(user):
-    user_intervals = INTERVALS.get(user)
-
-    days = 'M', 'T', 'W', 'Th', 'F', 'Sa', 'Su'
-
-    def fmt(timetuple):
-        d, h, m = timetuple
-        return "{} {:02d}{:02d}".format(days[d], h, m)
 
     result = []
     for i_start, i_end in itertools.chain.from_iterable(INTERVALS[user]):
-        start_tuple = from_minutes(i_start)
-        end_tuple = from_minutes(i_end)
-        result.append(fmt(start_tuple) + " -- " + fmt(end_tuple))
+        start_tuple = list(from_minutes(i_start))
+        end_tuple = list(from_minutes(i_end))
+        result.append([start_tuple, end_tuple])
 
     return result
 
+
+def get_blackouts(user):
+
+    result = []
+    for i_start, i_end in itertools.chain.from_iterable(BLACKOUTS[user]):
+        start_tuple = list(from_minutes(i_start))
+        end_tuple = list(from_minutes(i_end))
+        result.append([start_tuple, end_tuple])
+
+    return result
 
 def load(filename):
     with open(filename, 'r') as handle:

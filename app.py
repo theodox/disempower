@@ -26,9 +26,12 @@ def authorized():
 def css(filepath):
     return static_file(filepath, root="static")
 
+
 @app.get("/static/<filepath:re:.*\.js>")
 def js(filepath):
     return static_file(filepath, root="__target__")
+
+
 '''
 # this is for static files, like CSS
 @app.route('/<filename:path>')
@@ -183,22 +186,26 @@ def status():
         weekly = interval.get_weekly_allowance(user)
         credits = interval.get_credits(user)
         cap = interval.get_cap(user)
-        intevals = interval.get_intervals(user)
-
+        intervals = interval.get_intervals(user)
+        blackouts = interval.get_blackouts(user)
         context[user] = {'available': available,
                          'daily': daily,
                          'weekly': weekly,
                          'credits': credits,
                          'cap': cap,
-                         'intevals': intevals,
-                         'user': user
+                         'intervals': intervals,
+                         'user': user,
+                         'blackouts': blackouts
                          }
+
     return template('status.tpl', context=json.dumps(context))
 
 
 interval.DAILY_BANK['nicky'] = 10
 interval.add_interval('nicky', (6, 15, 0), (6, 23, 0))
 interval.WEEKLY_BANK['helen'] = 60
-interval.add_interval('helen', (2,15,30), (2, 20,0))
-
+interval.add_interval('helen', (2, 15, 30), (2, 20, 0))
+interval.add_interval('al', (0, 6, 30), (0, 13, 15))
+interval.add_blackout('nicky', (6, 20, 30), (6, 23, 59))
+interval.add_blackout('nicky', (0, 0, 0), (0, 6, 59))
 app.run(host='localhost', port=8080)
