@@ -87,15 +87,14 @@ def _add(user, start_tuple, end_tuple, target=INTERVALS):
         end_one = WEEK
         start_two = 0
         end_two = to_minutes(ed, eh, em)
-        segments = ((start_two, end_two), (start_one, end_one))
+        segments = ((start_two, end_two), (start_one, end_one),)
     else:
         segments = ((to_minutes(sd, sh, sm), to_minutes(ed, eh, em)), )
 
-    if segments in target[user]:
-        # ignore duplicates
-        return
+    for s in segments:
+        if s not in target[user]:
 
-    target[user].append(segments)
+            target[user].append(s)
     target[user].sort()
 
 
@@ -137,23 +136,25 @@ def check(user):
     now_minute = tick(user)
 
     """now = datetime.utcnow()
-            
+
                 local_time_offset = get_time_offset(now)
-            
-                now_minute = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
+
+                now_minute = to_minutes(now.isoweekday() %
+                                        7, now.hour, now.minute)
                 now_minute += local_time_offset
                 now_minute %= WEEK"""
 
     remaining = 0
 
-    for i_start, i_end in itertools.chain.from_iterable(INTERVALS[user]):
+    for i_start, i_end in get_intervals(user):
         if i_start <= now_minute <= i_end:
             remaining = max(remaining, i_end - now_minute)
 
-    if remaining:
-        for b_start, b_end in itertools.chain.from_iterable(BLACKOUTS[user]):
-            if b_start <= now_minute <= b_end:
-                return -1 * (b_end - now_minute)
+    # todo: replace with the logic from get_intervals
+#    if remaining:
+#        for b_start, b_end in itertools.chain.from_iterable(BLACKOUTS[user]):
+#            if b_start <= now_minute <= b_end:
+#                return -1 * (b_end - now_minute)
 
     user_total = CREDITS.get(user, 0)
 
@@ -281,24 +282,37 @@ def get_users():
 
 def get_intervals(user):
 
-    result = []
-    for i_start, i_end in itertools.chain.from_iterable(INTERVALS[user]):
-        start_tuple = list(from_minutes(i_start))
-        end_tuple = list(from_minutes(i_end))
-        result.append([start_tuple, end_tuple])
+    ints = (k for k in INTERVALS[user])
+    for b in BLACKOUTS[user]:
+        ints = (j for j in blackout_filter(ints, b))
 
-    return result
+    return (tuple(map(round, t)) for t in ints)
 
 
-def get_blackouts(user):
+def get_ui_intervals(user):
 
-    result = []
-    for i_start, i_end in itertools.chain.from_iterable(BLACKOUTS[user]):
-        start_tuple = list(from_minutes(i_start))
-        end_tuple = list(from_minutes(i_end))
-        result.append([start_tuple, end_tuple])
+    as_dates = ( (from_minutes(s), from_minutes(e)) for s, e in get_intervals(user))
+    return list(as_dates)
 
-    return result
+
+def blackout_filter(interval_stream, blackout):
+
+    for interval in interval_stream:
+
+        if max(*interval) <= min(*blackout):
+            yield interval
+            continue
+
+        if min(*interval) >= max(*blackout):
+            yield interval
+            continue
+
+        if min(*blackout) > min(*interval):
+            yield ((min(*interval), min(*blackout)))
+
+        if max(*blackout) < max(*interval):
+            yield (max(*blackout), max(*interval))
+
 
 def load(filename):
     with open(filename, 'r') as handle:
@@ -347,13 +361,14 @@ if __name__ == '__main__':
     WEEKLY_BANK['nicky'] = 5
     DAILY_BANK['helen'] = 7
 
-    add_interval('nicky', (0, 9, 30), (0, 10, 30))
-    add_interval('nicky', (6, 20, 0), (0, 1, 0))
-    add_blackout('nicky', (6, 20, 30), (6, 23, 0))
+    add_interval('nicky', (6, 23, 0), (0, 8, 0))
+    add_interval('nicky', (0, 9, 30), (0, 13, 30))
+    add_blackout('nicky', (0, 7, 0), (0, 9, 45))
+    add_blackout('nicky', (0, 11, 0), (0, 12, 00))
+    add_blackout('nicky', (0, 13, 15), (0, 20, 20))
 
-    for n in range(100):
-        tick('nicky')
-        print (CREDITS, ACTIVE)
-        time.sleep(20)
-
+    print (INTERVALS['nicky'])
+    print (BLACKOUTS['nicky'])
+    print (get_intervals('nicky'))
+    print (get_ui_intervals('nicky'))
     # save("test_db")

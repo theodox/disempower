@@ -186,8 +186,7 @@ def status():
         weekly = interval.get_weekly_allowance(user)
         credits = interval.get_credits(user)
         cap = interval.get_cap(user)
-        intervals = interval.get_intervals(user)
-        blackouts = interval.get_blackouts(user)
+        intervals = interval.get_ui_intervals(user)
         context[user] = {'available': available,
                          'daily': daily,
                          'weekly': weekly,
@@ -195,7 +194,6 @@ def status():
                          'cap': cap,
                          'intervals': intervals,
                          'user': user,
-                         'blackouts': blackouts
                          }
 
     return template('status.tpl', context=json.dumps(context))
