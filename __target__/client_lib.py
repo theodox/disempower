@@ -29,7 +29,12 @@ HR_LABEL = "hsl(180,0%,45%)"
 DAY_FONT = "18px Arial Black"
 DAY_LABEL = "hsl(180,0%,10%)"
 
-USER_COLORS = 'hsl(0,50%,50%, 0.25', 'hsl(90,50%,50%, 0.25', 'hsl(180,50%,50%, 0.25', 'hsl(270,50%,50%, 0.25'
+USER_COLORS = (
+    'hsl(0,50%,50%, 0.25',
+    'hsl(90,50%,50%, 0.25',
+    'hsl(180,50%,50%, 0.25',
+    'hsl(270,50%,50%, 0.25'
+)
 
 NOW_COLOR = 'hsl(0, 50%, 60%, 0.75)'
 
@@ -50,7 +55,7 @@ def hour_color(hour, day):
 
 def draw_calendar():
 
-    canvas = document.getElementById("fred")
+    canvas = document.getElementById("calendar_canvas")
 
     w = canvas.scrollWidth
     h = canvas.scrollHeight
@@ -142,14 +147,14 @@ def draw_calendar():
     now = __new__(Date())
     hour = now.getHours() + (now.getMinutes() / 60)
 
-    divider = ((hour + 1) / 25) 
-    
+    divider = ((hour + 1) / 25)
+
     draw_rect((0, divider - 0.005, 1, divider + 0.005), NOW_COLOR)
 
 
 def resize_handler():
     frame = document.getElementById('frame')
-    canvas = document.getElementById('fred')
+    canvas = document.getElementById('calendar_canvas')
     w = frame.scrollWidth
     # have to remember to account for
     # the padding, otherwise race condition
@@ -169,7 +174,7 @@ def show_times():
     for idx, u in enumerate(status.keys()):
 
         sp = document.createElement('BUTTON')
-        sp.innerHTML = u + ":"  + status[u]['credits']
+        sp.innerHTML = u + ":" + status[u]['credits']
         sp.style.backgroundColor = USER_COLORS[idx]
         sp.style.border = 'None'
         sp.style.color = 'White'
@@ -180,9 +185,8 @@ def show_times():
         names.appendChild(sp)
 
 
-
 if __name__ == '__main__':
     resize_handler()
     window.onresize = resize_handler
-    print ("BOOO")
     show_times()
+    print ("LOADED")

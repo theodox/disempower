@@ -83,9 +83,9 @@ def check_user(user):
     }
 
 
-@app.route('/credit/<user>/<amount:int>')
-def add_credit(user, amount):
-
+@app.route('/credit/<user>', method="POST")
+def add_credit(user):
+    amount = int(request.forms.get('credits', 0))
     result = authorized()
     if result:
         return result
@@ -197,6 +197,28 @@ def status():
                          }
 
     return template('status.tpl', context=json.dumps(context))
+
+
+@app.route("/user/<user>")
+def user_page(user):
+    available = interval.check(user)
+    daily = interval.get_daily_allowance(user)
+    weekly = interval.get_weekly_allowance(user)
+    credits = interval.get_credits(user)
+    cap = interval.get_cap(user)
+    intervals = interval.get_ui_intervals(user)
+    context = {user:
+               {'available': available,
+                'daily': daily,
+                'weekly': weekly,
+                'credits': credits,
+                'cap': cap,
+                'intervals': intervals,
+                'user': user,
+                }
+               }
+
+    return template('user.tpl', context=json.dumps(context), username=user)
 
 
 interval.DAILY_BANK['nicky'] = 10

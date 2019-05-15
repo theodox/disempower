@@ -19,7 +19,9 @@ SESSIONS = {}
 
 
 def validate(user, password):
+
     hashed = blake(password.encode('utf-8'))
+    print("hashed", hashed)
     try:
         return hashed == _cfg[user]['password']
     except KeyError:
