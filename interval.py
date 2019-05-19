@@ -105,8 +105,10 @@ def add_interval(user, st, en):
 def add_blackout(user, st, en):
     _add(user, st, en, BLACKOUTS)
 
-def get_blackouts(user):
-    return BLACKOUTS[user]
+def get_ui_blackouts(user):
+    as_dates = ((from_minutes(s), from_minutes(e))
+                for s, e in BLACKOUTS[user])
+    return list(as_dates)
 
 
 def clear_blackouts(user):

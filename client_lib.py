@@ -135,8 +135,7 @@ def draw_calendar():
             bottom = (1 + hr2 + min2 / 60) / 25
             draw_rect((left, top, right, bottom), USER_COLORS[idx % 4])
 
-        blackouts = status[user].get('blackouts', [])
-
+        blackouts = status[user]['blackouts']
         for i in blackouts:
             day1, hr1, min1 = i[0]
             day2, hr2, min2 = i[1]

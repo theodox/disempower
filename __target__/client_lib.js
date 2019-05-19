@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2019-05-14 22:14:27
+// Transcrypt'ed from Python, 2019-05-18 19:39:38
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 var __name__ = '__main__';
 export var STATUS = dict ({});
@@ -22,6 +22,7 @@ export var HR_LABEL = 'hsl(180,0%,45%)';
 export var DAY_FONT = '18px Arial Black';
 export var DAY_LABEL = 'hsl(180,0%,10%)';
 export var USER_COLORS = tuple (['hsl(0,50%,50%, 0.25', 'hsl(90,50%,50%, 0.25', 'hsl(180,50%,50%, 0.25', 'hsl(270,50%,50%, 0.25']);
+export var BLACKOUT_COLOR = 'hsl(0, 33%, 33%, 0.33)';
 export var NOW_COLOR = 'hsl(0, 50%, 60%, 0.75)';
 export var hour_color = function (hour, day) {
 	var evenodd = __mod__ (day, 2) == 0;
@@ -113,6 +114,23 @@ export var draw_calendar = function () {
 			var top = ((1 + hr1) + min1 / 60) / 25;
 			var bottom = ((1 + hr2) + min2 / 60) / 25;
 			draw_rect (tuple ([left, top, right, bottom]), USER_COLORS [__mod__ (idx, 4)]);
+		}
+		var blackouts = status [user] ['blackouts'];
+		for (var i of blackouts) {
+			var __left0__ = i [0];
+			var day1 = __left0__ [0];
+			var hr1 = __left0__ [1];
+			var min1 = __left0__ [2];
+			var __left0__ = i [1];
+			var day2 = __left0__ [0];
+			var hr2 = __left0__ [1];
+			var min2 = __left0__ [2];
+			var offset = idx / user_count;
+			var left = (day1 + offset) / 7;
+			var right = ((day2 + offset) + 1 / user_count) / 7;
+			var top = ((1 + hr1) + min1 / 60) / 25;
+			var bottom = ((1 + hr2) + min2 / 60) / 25;
+			draw_rect (tuple ([left, top, right, bottom]), BLACKOUT_COLOR);
 		}
 	}
 	ctx.strokeStyle = DIVIDER;
