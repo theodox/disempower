@@ -4,6 +4,8 @@
 <div class="card-body">
 
 <div class="container-fluid" id='frame'>
+	<h1>Weekly times</h1>
+	<h3>none</h3>
  		<canvas id="calendar_canvas" width=128 height=400></canvas>
  		<div id='names'></div>
  </div>

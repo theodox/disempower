@@ -106,6 +106,14 @@ def add_blackout(user, st, en):
     _add(user, st, en, BLACKOUTS)
 
 
+def clear_blackouts(user):
+    BLACKOUTS[user].clear()
+
+
+def clear_intervals(user):
+    INTERVALS[user].clear()
+
+
 def _remove(user, interval, dictionary):
     idx = dictionary[user].index(interval)
     del dictionary[user][idx]
@@ -291,7 +299,8 @@ def get_intervals(user):
 
 def get_ui_intervals(user):
 
-    as_dates = ( (from_minutes(s), from_minutes(e)) for s, e in get_intervals(user))
+    as_dates = ((from_minutes(s), from_minutes(e))
+                for s, e in get_intervals(user))
     return list(as_dates)
 
 

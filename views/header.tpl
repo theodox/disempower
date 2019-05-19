@@ -10,12 +10,27 @@
     </button>
     <a class="navbar-brand" href="#">Disempower</a>
   </div>
+
   <div id="navbar" class="navbar-collapse collapse">
     <ul class="nav navbar-nav">
-      <li class="{{'active' if title=='Page Title' else 'inactive'}}"><a href="/">Home</a></li>
-      <li><a href="/intervals">Intervals</a></li>
-      <li class="{{'active' if title=='Credits' else 'inactive'}}"><a href="/credits">Credits</a></li>
-      <li><a href="/logout">Log Out</a></li>
+      <li>
+        <a href="/status">Status</a>
+      </li>
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="/Status">Users
+            <span class="caret"></span>
+          </a>
+        <ul class="dropdown-menu">
+          % for item in users:
+            <li><a href="/user/{{!item}}">{{!item.title()}}</a></li>
+          % end
+        </ul>
+      </li> 
+
+      <li>
+        <a href="/logout">Log Out</a>
+      </li>
+
     </ul>
   </div><!--/.nav-collapse -->
 </div><!--/.container-fluid -->
