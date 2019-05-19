@@ -203,7 +203,7 @@ def status():
                          'credits': credits,
                          'cap': cap,
                          'intervals': intervals,
-                         'user': user,
+                         'user': user
                          }
 
     return template('status.tpl', context=json.dumps(context), users=interval.get_users())
@@ -217,6 +217,7 @@ def user_page(user):
     credits = interval.get_credits(user)
     cap = interval.get_cap(user)
     intervals = interval.get_ui_intervals(user)
+    blackouts = interval.get_blackouts(user)
     context = {user:
                {'available': available,
                 'daily': daily,
@@ -225,6 +226,7 @@ def user_page(user):
                 'cap': cap,
                 'intervals': intervals,
                 'user': user,
+                'blackouts': blackouts
                 }
                }
 

@@ -36,6 +36,8 @@ USER_COLORS = (
     'hsl(270,50%,50%, 0.25'
 )
 
+BLACKOUT_COLOR = 'hsl(0, 33%, 33%, 0.33)'
+
 NOW_COLOR = 'hsl(0, 50%, 60%, 0.75)'
 
 
@@ -132,6 +134,20 @@ def draw_calendar():
             top = (1 + hr1 + min1 / 60) / 25
             bottom = (1 + hr2 + min2 / 60) / 25
             draw_rect((left, top, right, bottom), USER_COLORS[idx % 4])
+
+        blackouts = status[user].get('blackouts', [])
+
+        for i in blackouts:
+            day1, hr1, min1 = i[0]
+            day2, hr2, min2 = i[1]
+
+            offset = idx / user_count
+            left = (day1 + offset) / 7
+            right = (day2 + offset + (1 / user_count)) / 7
+            top = (1 + hr1 + min1 / 60) / 25
+            bottom = (1 + hr2 + min2 / 60) / 25
+            draw_rect((left, top, right, bottom), BLACKOUT_COLOR)
+
 
     # grid lines
     ctx.strokeStyle = DIVIDER
