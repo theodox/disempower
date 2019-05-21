@@ -7,6 +7,8 @@ import os
 
 disempower_dir = os.path.dirname(__file__)
 views_dir = os.path.join(disempower_dir, 'views')
+static_dir = os.path.join(disempower_dir, 'static')
+js_dir = os.path.join(disempower_dir, '__target__')
 
 app = Bottle()
 TEMPLATE_PATH.insert(0, views_dir)
@@ -25,12 +27,12 @@ def authorized():
 
 @app.get("/static/<filepath:re:.*\.css>")
 def css(filepath):
-    return static_file(filepath, root="static")
+    return static_file(filepath, root=static_dir)
 
 
 @app.get("/static/<filepath:re:.*\.js>")
 def js(filepath):
-    return static_file(filepath, root="__target__")
+    return static_file(filepath, root=js_dir)
 
 
 '''
