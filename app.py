@@ -85,7 +85,7 @@ def add_user():
 
     new_user_name = request.forms.get('username')
     if new_user_name not in interval.get_users():
-        for d in range(6):
+        for d in range(7):
             interval.add_interval(new_user_name, (d,8,0), (d, 21, 0))
         interval.add_credit(new_user_name, 60)
         interval.set_weekly_allowance(new_user_name, 0)
