@@ -83,8 +83,9 @@ def add_user():
 
     new_user_name = request.forms.get('username')
     if new_user_name not in interval.get_users():
-        
-        interval.add_user(new_user_name)
+        for d in range(6):
+            interval.add_interval(new_user_name, (d,8,0), (d, 21, 0))
+        interval.add_credit(new_user_name, 60)
     return redirect('/user/' + new_user_name)
 
 @app.route('/credits')
