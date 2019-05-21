@@ -9,6 +9,7 @@ disempower_dir = os.path.dirname(__file__)
 views_dir = os.path.join(disempower_dir, 'views')
 static_dir = os.path.join(disempower_dir, 'static')
 js_dir = os.path.join(disempower_dir, '__target__')
+save_file = os.path.join(disempower_dir, 'disempowerdb')
 
 app = Bottle()
 TEMPLATE_PATH.insert(0, views_dir)
@@ -75,6 +76,7 @@ def new_user():
 @app.route('/logout')
 def logout():
     auth.logout(request)
+    interval.save_file(save_file)
     redirect("/")
 
 @app.route('/adduser', method="POST")
@@ -257,3 +259,10 @@ def user_page(user):
                     username=user,
                     credits=credits, intervals=intervals,
                     users=interval.get_users())
+
+# load the database when imported
+try:
+    interval.load(save_file)
+except IOError:
+    print ("no save file")
+    
