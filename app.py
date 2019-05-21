@@ -76,7 +76,7 @@ def new_user():
 @app.route('/logout')
 def logout():
     auth.logout(request)
-    interval.save_file(save_file)
+    interval.save(save_file)
     redirect("/")
 
 @app.route('/adduser', method="POST")
@@ -92,6 +92,7 @@ def add_user():
         interval.add_credit(new_user_name, 60)
         interval.set_weekly_allowance(new_user_name, 0)
         interval.set_daily_allowance(new_user_name, 60)
+        interval.save(save_file)
     return redirect('/user/' + new_user_name)
 
 @app.route('/credits')
@@ -116,6 +117,7 @@ def add_credit(user):
         return result
 
     interval.add_credit(user, amount)
+    interval.save(save_file)
     return redirect('/user/' + user)
 
 
@@ -265,4 +267,4 @@ try:
     interval.load(save_file)
 except IOError:
     print ("no save file")
-    
+
