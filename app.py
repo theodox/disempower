@@ -237,11 +237,4 @@ def user_page(user):
                     users=interval.get_users())
 
 
-interval.DAILY_BANK['nicky'] = 10
-interval.add_interval('nicky', (6, 15, 0), (6, 23, 0))
-interval.WEEKLY_BANK['helen'] = 60
-interval.add_interval('helen', (2, 15, 30), (2, 20, 0))
-interval.add_interval('al', (0, 6, 30), (0, 13, 15))
-interval.add_blackout('nicky', (6, 20, 30), (6, 23, 59))
-interval.add_blackout('nicky', (0, 0, 0), (0, 6, 59))
-app.run(host='localhost', port=8080)
+
