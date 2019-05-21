@@ -26,6 +26,9 @@
           % end
         </ul>
       </li> 
+      <li>
+        <a href="/newuser">Add User</a>
+      </li>
 
       <li>
         <a href="/logout">Log Out</a>

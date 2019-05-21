@@ -64,12 +64,28 @@ def login_dialog():
     return redirect("/")
 
 
+# add a user
+@app.route("/newuser")
+def new_user():
+    return authorized() or template("newuser.tpl")
+
 # log out and return to login screen
 @app.route('/logout')
 def logout():
     auth.logout(request)
     redirect("/")
 
+@app.route('/adduser', method="POST")
+def add_user():
+    not_auth = authorized()
+    if not_auth:
+        return not_auth
+
+    new_user_name = request.forms.get('username')
+    if new_user_name not in interval.get_users():
+        
+        interval.add_user(new_user_name)
+    return redirect('/user/' + new_user_name)
 
 @app.route('/credits')
 def credits():
