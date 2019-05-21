@@ -67,7 +67,7 @@ def login_dialog():
 # add a user
 @app.route("/newuser")
 def new_user():
-    return authorized() or template("newuser.tpl")
+    return authorized() or template("newuser.tpl", users = interval.get_users())
 
 # log out and return to login screen
 @app.route('/logout')
