@@ -86,6 +86,8 @@ def add_user():
         for d in range(6):
             interval.add_interval(new_user_name, (d,8,0), (d, 21, 0))
         interval.add_credit(new_user_name, 60)
+        interval.set_weekly_allowance(new_user_name, 0)
+        interval.set_daily_allowance(new_user_name, 60)
     return redirect('/user/' + new_user_name)
 
 @app.route('/credits')
