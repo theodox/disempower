@@ -216,19 +216,7 @@ def activate(user):
             ACTIVE[u] = -1
 
 
-def save(filename):
 
-    state = {
-        'CREDITS': CREDITS,
-        'INTERVALS': INTERVALS,
-        'BLACKOUTS': BLACKOUTS,
-        'DAILY_BANK': DAILY_BANK,
-        'WEEKLY_BANK': WEEKLY_BANK,
-        'CAPS': CAPS
-    }
-
-    with open(filename, 'wb') as handle:
-        pickle.dump(state, handle)
 
 
 def daily_topoff(today_datetime):
@@ -249,9 +237,15 @@ def daily_topoff(today_datetime):
         print ("topoff", d, day_number)
 
         for u in DAILY_BANK:
-            CREDITS[u] += DAILY_BANK.get(u, 0)
+            daily = DAILY_BANK[u] or 0
+            print (">D>", daily, DAILY_BANK)
+            CREDITS[u] += daily
+
         if day_number == 0:
-            CREDITS[u] += WEEKLY_BANK.get(u, 0)
+            weekly = WEEKLY_BANK[u] or 0
+            print (">W>", weekly, WEEKLY_BANK)
+            CREDITS[u] += weekly
+            
         CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
 
     LAST_TOPOFF = current_day_serial
@@ -328,8 +322,23 @@ def blackout_filter(interval_stream, blackout):
             yield (max(*blackout), max(*interval))
 
 
+def save(filename):
+
+    state = {
+        'CREDITS': CREDITS,
+        'INTERVALS': INTERVALS,
+        'BLACKOUTS': BLACKOUTS,
+        'DAILY_BANK': DAILY_BANK,
+        'WEEKLY_BANK': WEEKLY_BANK,
+        'CAPS': CAPS
+    }
+
+    with open(filename, 'wb') as handle:
+        pickle.dump(state, handle)
+
+
 def load(filename):
-    with open(filename, 'r') as handle:
+    with open(filename, 'rb') as handle:
         state = pickle.load(handle)
         CREDITS.clear()
         CREDITS.update(state['CREDITS'])

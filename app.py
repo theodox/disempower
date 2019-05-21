@@ -9,7 +9,7 @@ disempower_dir = os.path.dirname(__file__)
 views_dir = os.path.join(disempower_dir, 'views')
 static_dir = os.path.join(disempower_dir, 'static')
 js_dir = os.path.join(disempower_dir, '__target__')
-save_file = os.path.join(disempower_dir, 'disempowerdb')
+save_file = os.path.abspath(os.path.join(disempower_dir, '..', 'disempowerdb'))
 
 app = Bottle()
 TEMPLATE_PATH.insert(0, views_dir)
@@ -67,17 +67,20 @@ def login_dialog():
     return redirect("/")
 
 
-# add a user
-@app.route("/newuser")
-def new_user():
-    return authorized() or template("newuser.tpl", users = interval.get_users())
-
 # log out and return to login screen
 @app.route('/logout')
 def logout():
     auth.logout(request)
     interval.save(save_file)
     redirect("/")
+
+# add a user -----------------
+
+
+@app.route("/newuser")
+def new_user():
+    return authorized() or template("newuser.tpl", users=interval.get_users())
+
 
 @app.route('/adduser', method="POST")
 def add_user():
@@ -88,24 +91,17 @@ def add_user():
     new_user_name = request.forms.get('username')
     if new_user_name not in interval.get_users():
         for d in range(7):
-            interval.add_interval(new_user_name, (d,8,0), (d, 21, 0))
+            interval.add_interval(new_user_name, (d, 8, 0), (d, 21, 0))
         interval.add_credit(new_user_name, 60)
         interval.set_weekly_allowance(new_user_name, 0)
         interval.set_daily_allowance(new_user_name, 60)
         interval.save(save_file)
     return redirect('/user/' + new_user_name)
 
+
 @app.route('/credits')
 def credits():
     return authorized() or template('credits.tpl')
-
-
-@app.route('/check/<user>')
-def check_user(user):
-    return {
-        'user': interval.check(user),
-        'credits': interval.CREDITS.get(user, 0)
-    }
 
 
 @app.route('/credit/<user>', method="POST")
@@ -187,84 +183,74 @@ def add_blackout(user, numbers):
         }
 
 
-@app.route("/daily/<user>/<amount:int>")
-def set_daily(user, amount):
+@app.route("/daily/<user>", method="POST")
+def set_daily(user):
     result = authorized()
     if result:
         return result
+
+    amount = int(request.forms.get('daily_cred', '0'))
 
     interval.set_daily_allowance(user, amount)
-    return {
-        'user': user,
-        'daily': interval.get_daily_allowance(user)
-    }
+    return redirect('/user/' + user)
 
 
-@app.route("/weekly/<user>/<amount:int>")
-def set_weekly(user, amount):
+@app.route("/weekly/<user>", method='POST')
+def set_weekly(user):
     result = authorized()
     if result:
         return result
 
+    amount = int(request.forms.get('weekly_cred', '0'))
+
     interval.set_weekly_allowance(user, amount)
-    return {
-        'user': user,
-        'weekly': interval.get_weekly_allowance(user)
-    }
+    return redirect('/user/' + user)
 
 
 @app.route("/status")
 def status():
     context = {}
     for user in interval.get_users():
-        available = interval.check(user)
-        daily = interval.get_daily_allowance(user)
-        weekly = interval.get_weekly_allowance(user)
-        credits = interval.get_credits(user)
-        cap = interval.get_cap(user)
         intervals = interval.get_ui_intervals(user)
-        context[user] = {'available': available,
-                         'daily': daily,
-                         'weekly': weekly,
-                         'credits': credits,
-                         'cap': cap,
-                         'intervals': intervals,
-                         'user': user,
-                         'blackouts': []
-                         }
+        context[user] = {
+            'intervals': intervals,
+            'user': user,
+            'blackouts': []
+        }
 
-    return template('status.tpl', context=json.dumps(context), users=interval.get_users())
+    return template('status.tpl',
+                    context=json.dumps(context),
+                    users=interval.get_users())
 
 
 @app.route("/user/<user>")
 def user_page(user):
     available = interval.check(user)
-    daily = interval.get_daily_allowance(user)
+    daily = interval.get_daily_allowance(user,)
     weekly = interval.get_weekly_allowance(user)
     credits = interval.get_credits(user)
     cap = interval.get_cap(user)
     intervals = interval.get_ui_intervals(user)
     blackouts = interval.get_ui_blackouts(user)
-    context = {user:
-               {'available': available,
-                'daily': daily,
-                'weekly': weekly,
-                'credits': credits,
-                'cap': cap,
-                'intervals': intervals,
-                'user': user,
-                'blackouts': blackouts
-                }
-               }
+    context = {user: {
+        'intervals': intervals,
+        'user': user,
+        'blackouts': blackouts}
+    }
 
     return template('user.tpl', context=json.dumps(context),
                     username=user,
-                    credits=credits, intervals=intervals,
+                    credits=credits,
+                    intervals=intervals,
+                    daily=daily,
+                    weekly=weekly,
+                    cap=cap,
                     users=interval.get_users())
+
+
 
 # load the database when imported
 try:
     interval.load(save_file)
 except IOError:
     print ("no save file")
-
