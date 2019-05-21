@@ -1,10 +1,12 @@
 import hashlib
 import datetime
 import configparser
+import os
 
+filepath = os.path.dirname(__file__)
 
 _cfg = configparser.ConfigParser()
-_cfg.read('conf.ini')
+_cfg.read(filepath + '/conf.ini')
 
 SECRET = _cfg['auth']['secret']
 

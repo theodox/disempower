@@ -1,7 +1,7 @@
 from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response, redirect, static_file
-import interval
+import disempower.interval as interval
 import re
-import auth
+import disempower.auth as auth
 import json
 import ast
 

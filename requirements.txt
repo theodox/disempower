@@ -6,6 +6,5 @@ idna==2.8
 pycrypto==2.6.1
 pytz==2019.1
 requests==2.21.0
-Transcrypt==3.7.16
 tzlocal==1.5.1
 urllib3==1.24.3
