@@ -1,14 +1,15 @@
-from bottle import route, run, Bottle, request, template, TEMPLATE_PATH, abort, response, redirect, static_file
+from bottle import Bottle, request, template, TEMPLATE_PATH, abort, response, redirect, static_file
 import disempower.interval as interval
-import re
 import disempower.auth as auth
 import json
 import ast
+import os
 
-#------------------
+disempower_dir = os.path.dirname(__file__)
+views_dir = os.path.join(disempower_dir, 'views')
 
 app = Bottle()
-# TEMPLATE_PATH.insert(0, 'html')
+TEMPLATE_PATH.insert(0, views_dir)
 
 
 SESSION_TIMEOUT = 300
@@ -235,6 +236,3 @@ def user_page(user):
                     username=user,
                     credits=credits, intervals=intervals,
                     users=interval.get_users())
-
-
-
