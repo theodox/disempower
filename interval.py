@@ -105,6 +105,7 @@ def add_interval(user, st, en):
 def add_blackout(user, st, en):
     _add(user, st, en, BLACKOUTS)
 
+
 def get_ui_blackouts(user):
     as_dates = ((from_minutes(s), from_minutes(e))
                 for s, e in BLACKOUTS[user])
@@ -136,6 +137,14 @@ def add_credit(user, amount):
     total = CREDITS.get(user, 0)
     total += amount
     CREDITS[user] = total
+
+
+def set_credit(user, amount):
+    CREDITS[user] = amount
+
+def set_cap(user, amount):
+    CAPS[user] = amount
+
 
 
 def check(user):
@@ -216,9 +225,6 @@ def activate(user):
             ACTIVE[u] = -1
 
 
-
-
-
 def daily_topoff(today_datetime):
     global LAST_TOPOFF
 
@@ -241,12 +247,13 @@ def daily_topoff(today_datetime):
             print (">D>", daily, DAILY_BANK)
             CREDITS[u] += daily
 
+
         if day_number == 0:
             weekly = WEEKLY_BANK[u] or 0
             print (">W>", weekly, WEEKLY_BANK)
             CREDITS[u] += weekly
-            
-        CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
+
+            CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
 
     LAST_TOPOFF = current_day_serial
 

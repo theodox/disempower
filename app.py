@@ -104,18 +104,6 @@ def credits():
     return authorized() or template('credits.tpl')
 
 
-@app.route('/credit/<user>', method="POST")
-def add_credit(user):
-
-    amount = int(request.forms.get('credits', 0))
-    result = authorized()
-    if result:
-        return result
-
-    interval.add_credit(user, amount)
-    interval.save(save_file)
-    return redirect('/user/' + user)
-
 
 @app.route("/interval/<user>", method="POST")
 def add_interval(user):
@@ -183,6 +171,36 @@ def add_blackout(user, numbers):
         }
 
 
+
+
+@app.route('/credit/<user>', method="POST")
+def set_credit(user):
+
+    amount = int(request.forms.get('credits', 0))
+    result = authorized()
+    if result:
+        return result
+
+    interval.set_credit(user, amount)
+    interval.save(save_file)
+    return redirect('/user/' + user)
+
+
+
+@app.route('/cap/<user>', method="POST")
+def set_credit(user):
+
+    amount = int(request.forms.get('cap', 60))
+    result = authorized()
+    if result:
+        return result
+
+    interval.set_cap(user, amount)
+    interval.save(save_file)
+    return redirect('/user/' + user)
+
+
+
 @app.route("/daily/<user>", method="POST")
 def set_daily(user):
     result = authorized()
@@ -192,6 +210,7 @@ def set_daily(user):
     amount = int(request.forms.get('daily_cred', '0'))
 
     interval.set_daily_allowance(user, amount)
+    interval.save(save_file)
     return redirect('/user/' + user)
 
 
@@ -204,6 +223,7 @@ def set_weekly(user):
     amount = int(request.forms.get('weekly_cred', '0'))
 
     interval.set_weekly_allowance(user, amount)
+    interval.save(save_file)
     return redirect('/user/' + user)
 
 
