@@ -4,15 +4,24 @@
 <div class="card-body" id='loginform'>
 	<div class="form-group-lg">
 	<form method="POST" action="/login">
-		<div class="input-group form-group-lg">
-			<label for="username">User Name</label>
-			<input type="text" class="form-control" placeholder="username" name="username">			
+		<div class="input-group mb-2">
+			<div class="input-group-prepend">
+				<div class="input-group-text">
+					Username
+				</div>
+			</div>
+			<input type="text" class="form-control"  id="inlineFormInputGroup"placeholder="username" name="username">			
 		</div>
-		<div class="input-group form-group-lg">
-			<label for="password">Password</label>
+
+		<div class="input-group mb-2">
+			<div class="input-group-prepend">
+				<div class="input-group-text">
+					Password
+				</div>
+			</div>
 			<input type="password" class="form-control" placeholder="password" name="password">
 		</div>
-		<input type="submit" value="Login" class="btn float-right login_btn">
+		<input type="submit" value="Login" class="btn btn-primary btn-block login_btn">
 	</form>
 	</div>
 </div>

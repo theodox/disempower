@@ -234,6 +234,16 @@ def set_weekly(user):
     return redirect('/user/' + user)
 
 
+@app.route("/delete/<user>")
+def delete_user(user):
+    result = authorized()
+    if result:
+        return result
+
+    interval.delete_user(user)
+    return redirect("/")
+
+
 @app.route("/status")
 def status():
     context = {}

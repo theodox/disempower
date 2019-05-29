@@ -60,7 +60,7 @@
 								</select>
 							</div>
 							<div class="col-sm"></div>
-							<input type="submit" class="btn btn-outline-primary" id="set" name="set"/></input>
+							<input type="submit" class="btn btn-warning" id="set" name="set"/></input>
 
 						</div>
 					</form>
@@ -71,13 +71,13 @@
 				<div class="col-sm"></div>
 				<div class="col-md-4">
 					<form method="POST" action="/clear_intervals/{{!username}}">
-						<button type="submit" class="btn btn-outline-primary" id="set" name="set"/>Clear all intervals</button>
+						<button type="submit" class="btn btn-warning btn-block" id="set" name="set"/>Clear all intervals</button>
 					</form>
 				</div>
 					<div class="col-sm"></div>
 				<div class="col-md-4">
 					<form method="POST" action="/clear_blackouts/{{!username}}">
-						<button type="submit" class="btn btn-outline-primary" id="set" name="set"/>Clear all blackouts</button>
+						<button type="submit" class="btn btn-warning btn-block" id="set" name="set"/>Clear all blackouts</button>
 					</form>
 				</div>
 					<div class="col-sm"></div>
@@ -96,7 +96,7 @@
 							<label for='credits'>Available</label>
 							<div class="form-inline">
 								<input type="number" name="credits"  class="form-control" aria-describedby="inputGroup-sizing-default" min="0"  value={{!credits}} max=720>		
-								<button type="submit" class="btn btn-outline-primary" id="submit" name="submit"/>Set</button>
+								<button type="submit" class="btn btn-info" id="submit" name="submit"/>Set</button>
 							</div>
 						</div>
 					</form>
@@ -108,7 +108,7 @@
 							<label for='cap'>Maximum</label>
 							<div class="form-inline">
 								<input type="number" name="cap"  class="form-control" aria-describedby="inputGroup-sizing-default" min="0"  value={{!cap}} max=720>		
-								<button type="submit" class="btn btn-outline-primary" id="submit" name="submit"/>Set</button>
+								<button type="submit" class="btn btn-info" id="submit" name="submit"/>Set</button>
 							</div>
 						</div>
 					</form>
@@ -126,7 +126,7 @@
 							<label for='daily_cred'>Daily</label>
 							<div class='form-inline'>
 								<input type="number" name="daily_cred"  class="form-control" aria-describedby="inputGroup-sizing-default" min=0 max=300 value={{!daily}} step=15>				
-								<button type="submit" class="btn btn-outline-primary" id="submit" name="submit"/>Set</button>
+								<button type="submit" class="btn btn-info" id="submit" name="submit"/>Set</button>
 							</div>
 						</div>
 					</form>
@@ -137,11 +137,18 @@
 							<label for="weekly_cred">Weekly</label>
 							<div class="form-inline"> 
 								<input type="number" name="weekly_cred"  class="form-control" aria-describedby="inputGroup-sizing-default" min=0 max=600  value={{!weekly}} step=15>		
-								<button type="submit" class="btn btn-outline-primary" id="submit" name="submit"/>Set</button>
+								<button type="submit" class="btn btn-info" id="submit" name="submit"/>Set</button>
 							</div>
 						</div>
 					</form>
 				</div>
+			</div>
+
+			<div class="row">
+				<button id='deleteBtn' class="btn btn-large btn-block btn-danger">
+					Delete this user
+				</button>
+				
 			</div>
 		</div>
 	</div>
@@ -155,3 +162,5 @@
 
 <script type="module">window.disempower.set_status({{!context}});</script>
 <script type="module">window.disempower.draw_calendar()</script>
+<script type="module">window.disempower.delete_button_handler("{{!username}}")</script>
+

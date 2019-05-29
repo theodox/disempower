@@ -142,9 +142,9 @@ def add_credit(user, amount):
 def set_credit(user, amount):
     CREDITS[user] = amount
 
+
 def set_cap(user, amount):
     CAPS[user] = amount
-
 
 
 def check(user):
@@ -247,7 +247,6 @@ def daily_topoff(today_datetime):
             print (">D>", daily, DAILY_BANK)
             CREDITS[u] += daily
 
-
         if day_number == 0:
             weekly = WEEKLY_BANK[u] or 0
             print (">W>", weekly, WEEKLY_BANK)
@@ -292,6 +291,14 @@ def get_credits(user):
 
 def get_users():
     return INTERVALS.keys()
+
+
+def delete_user(user):
+    for each_dict in (INTERVALS, CREDITS, WEEKLY_BANK, DAILY_BANK, CAPS, BLACKOUTS):
+        try:
+            each_dict.pop(user)
+        except:
+            pass
 
 
 def get_intervals(user):

@@ -5,9 +5,9 @@
 
 <div class="container-fluid" id='frame'>
 	<h1>Weekly times</h1>
-	<h3>none</h3>
  		<canvas id="calendar_canvas" width=128 height=400></canvas>
  		<div id='names'></div>
  </div>
 <script type="module">window.disempower.set_status({{!context}});</script>
 <script type="module">window.disempower.draw_calendar()</script>
+<script type="module">window.disempower.show_times()</script>

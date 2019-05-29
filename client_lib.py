@@ -147,7 +147,6 @@ def draw_calendar():
             bottom = (1 + hr2 + min2 / 60) / 25
             draw_rect((left, top, right, bottom), BLACKOUT_COLOR)
 
-
     # grid lines
     ctx.strokeStyle = DIVIDER
     for i in range(1, 25):
@@ -188,16 +187,21 @@ def show_times():
     status = get_status()
     for idx, u in enumerate(status.keys()):
 
-        sp = document.createElement('BUTTON')
-        sp.innerHTML = u + ":" + status[u]['credits']
+        sp = document.createElement('a')
+        sp.innerHTML = u
         sp.style.backgroundColor = USER_COLORS[idx]
-        sp.style.border = 'None'
-        sp.style.color = 'White'
-        sp.style.textAlign = 'left'
-        sp.style.margin = '0px 8px'
-        sp.style.font = "14px Arial"
-        sp.style.width = '24%'
+        sp.className = 'btn'
+        sp.href = "/user/" + u
         names.appendChild(sp)
+
+
+def delete_button_handler(username):
+    def delete_user():
+        nonlocal username
+        if window.confirm("Really delete {}?".format(username)):
+            window.location.href = "/delete/" + username
+
+    document.getElementById('deleteBtn').onclick = delete_user
 
 
 if __name__ == '__main__':
