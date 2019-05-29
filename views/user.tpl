@@ -9,11 +9,12 @@
 
 		<canvas id="calendar_canvas" width=128 height=400></canvas>
 
-		<div id="creditdiv" class="col-md-8">
+		<div id="creditdiv" class="container">
 
+			<div class="row row-top-buffer"></div>
 			
-			<div class="form-group row row-top-buffer row-bottom-buffer form-horizontal">
-				<form method="POST" action="/interval/{{!username}}">
+			<div class="row row-top-buffer ">
+				<div class="col-md-12"><form method="POST" action="/interval/{{!username}}" >
 					<div class="form-group form-inline">
 
 						<div class="input-group-prepend">
@@ -46,40 +47,45 @@
 					</div>
 
 				</form>
-
 			</div>
 
+		</div>
 
 
-			<div class="form-group row row-top-buffer row-bottom-buffer form-horizontal">
-				<form method="POST" action="/credit/{{!username}}">
-					<div class="form-inline">
+
+		<div class="row">
+			<div class="col-md-6">
+				<form method="POST" action="/credit/{{!username}}" >
+					<div class="form-inline form-horizontal">
 						<div class="input-group-prepend">
-							<span class="input-group-text" id="inputGroup-sizing-default">Minutes</span>
+							<span class="input-group-text" id="inputGroup-sizing-default">Available</span>
 						</div>
-						<input type="number" name="credits"  class="form-control" aria-describedby="inputGroup-sizing-default" min="0"  value={{!credits}} >		
+						<input type="number" name="credits"  class="form-control" aria-describedby="inputGroup-sizing-default" min="0"  value={{!credits}} max=720>		
 						<div class="form-group">
 							<button type="submit" class="btn btn-outline-primary" id="submit" name="submit"/>Set</button>
 						</div>
 					</div>
 				</form>
 			</div>
-
-			<div class="form-group row row-top-buffer row-bottom-buffer form-horizontal">
-				<form method="POST" action="/cap/{{!username}}">
+			<div class="col-md-6">
+				<form method="POST" action="/cap/{{!username}}" >
 					<div class="form-inline">
 						<div class="input-group-prepend">
-							<span class="input-group-text" id="inputGroup-sizing-default">Cap</span>
+							<span class="input-group-text" id="inputGroup-sizing-default">Maximum </span>
 						</div>
-						<input type="number" name="cap"  class="form-control" aria-describedby="inputGroup-sizing-default" min="0"  value={{!cap}} >		
+						<input type="number" name="cap"  class="form-control" aria-describedby="inputGroup-sizing-default" min="0"  value={{!cap}} max=720>		
 						<div class="form-group">
 							<button type="submit" class="btn btn-outline-primary" id="submit" name="submit"/>Set</button>
 						</div>
 					</div>
 				</form>
 			</div>
+		</div>
 
-			<div class="form-group">
+
+
+		<div class="row row-bottom-buffer">
+			<div class="col-md-6">
 				<form method="POST" action="/daily/{{!username}}">
 					<div class="form-inline">
 						<div class="input-group-prepend">
@@ -92,7 +98,7 @@
 					</div>
 				</form>
 			</div>
-			<div class="form-group">
+			<div class="col-md-6">
 				<form method="POST" action="/weekly/{{!username}}">
 					<div class="form-inline">
 						<div class="input-group-prepend">
@@ -107,12 +113,13 @@
 			</div>
 		</div>
 	</div>
+</div>
 
-	
 
-	<div>
-	</div>
-	<div id='names'></div>
+
+<div>
+</div>
+<div id='names'></div>
 </div>
 
 <script type="module">window.disempower.set_status({{!context}});</script>

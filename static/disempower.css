@@ -30,3 +30,8 @@ canvas {
 .creditdiv {
     width: 50%;
 }
+
+.fw {
+    display: inline-block;
+    width: 64px;
+}
