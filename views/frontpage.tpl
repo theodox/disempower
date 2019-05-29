@@ -2,6 +2,7 @@
 % include('header.tpl', title='Disempower Login')
 
 <div class="card-body" id='loginform'>
+	<div class="form-group-lg">
 	<form method="POST" action="/login">
 		<div class="input-group form-group-lg">
 			<label for="username">User Name</label>
@@ -13,4 +14,5 @@
 		</div>
 		<input type="submit" value="Login" class="btn float-right login_btn">
 	</form>
+	</div>
 </div>

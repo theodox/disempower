@@ -104,6 +104,23 @@ def credits():
     return authorized() or template('credits.tpl')
 
 
+@app.route('/clear_intervals/<user>', method="POST")
+def clear_interval(user):
+    result = authorized()
+    if result:
+        return result
+    interval.clear_intervals(user)
+    return redirect("/user/" + user)
+
+
+@app.route('/clear_blackouts/<user>', method="POST")
+def clear_blackouts(user):
+    result = authorized()
+    if result:
+        return result
+    interval.clear_blackouts(user)
+    return redirect("/user/" + user)
+
 
 @app.route("/interval/<user>", method="POST")
 def add_interval(user):
@@ -111,7 +128,7 @@ def add_interval(user):
     if result:
         return result
 
-    action = request.forms.get('action')
+    action = request.forms.get('action_type')
 
     days = ast.literal_eval(request.forms.get('days'))
     start_time = request.forms.get('start_time')
@@ -134,12 +151,6 @@ def add_interval(user):
                 (start_day, start_time[0], start_time[1]),
                 (start_day, end_time[0], end_time[1])
             )
-        elif action == 'clear':
-            interval.clear_intervals(user)
-            break
-        elif action == 'unblock':
-            interval.clear_blackouts(user)
-            break
 
     return redirect("/user/" + user)
 
@@ -171,8 +182,6 @@ def add_blackout(user, numbers):
         }
 
 
-
-
 @app.route('/credit/<user>', method="POST")
 def set_credit(user):
 
@@ -186,7 +195,6 @@ def set_credit(user):
     return redirect('/user/' + user)
 
 
-
 @app.route('/cap/<user>', method="POST")
 def set_credit(user):
 
@@ -198,7 +206,6 @@ def set_credit(user):
     interval.set_cap(user, amount)
     interval.save(save_file)
     return redirect('/user/' + user)
-
 
 
 @app.route("/daily/<user>", method="POST")
