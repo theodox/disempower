@@ -5,6 +5,12 @@ import json
 import ast
 import os
 
+import logging
+logger = logging.getLogger("disempower")
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
+
+
 disempower_dir = os.path.dirname(__file__)
 views_dir = os.path.join(disempower_dir, 'views')
 static_dir = os.path.join(disempower_dir, 'static')
@@ -99,11 +105,6 @@ def add_user():
     return redirect('/user/' + new_user_name)
 
 
-@app.route('/credits')
-def credits():
-    return authorized() or template('credits.tpl')
-
-
 @app.route('/clear_intervals/<user>', method="POST")
 def clear_interval(user):
     result = authorized()
@@ -136,23 +137,15 @@ def add_interval(user):
     start_time = [int(k) for k in start_time.split(":")]
     end_time = [int(k) for k in end_time.split(":")]
 
-
-
-    print ("days", days, 'action', action, "st", start_time, "en", end_time)
     for start_day in days:
 
+        start_tuple = start_day, start_time[0], start_time[1]
+        end_tuple = start_day, end_time[0], end_time[1]
+
         if action == 'add':
-            interval.add_interval(
-                user,
-                (start_day, start_time[0], start_time[1]),
-                (start_day, end_time[0], end_time[1])
-            )
+            interval.add_interval(user, start_tuple, end_tuple)
         elif action == 'block':
-            interval.add_blackout(
-                user,
-                (start_day, start_time[0], start_time[1]),
-                (start_day, end_time[0], end_time[1])
-            )
+            interval.add_blackout(user, start_tuple, end_tuple)
 
     return redirect("/user/" + user)
 
@@ -264,7 +257,6 @@ def status():
 
 @app.route("/user/<user>")
 def user_page(user):
-    available = interval.check(user)
     daily = interval.get_daily_allowance(user,)
     weekly = interval.get_weekly_allowance(user)
     credits = interval.get_credits(user)
