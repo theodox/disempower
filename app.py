@@ -136,7 +136,9 @@ def add_interval(user):
     start_time = [int(k) for k in start_time.split(":")]
     end_time = [int(k) for k in end_time.split(":")]
 
-    print ("days", days, 'action', action)
+
+
+    print ("days", days, 'action', action, "st", start_time, "en", end_time)
     for start_day in days:
 
         if action == 'add':
@@ -284,6 +286,15 @@ def user_page(user):
                     cap=cap,
                     users=interval.get_users())
 
+
+@app.route('/check/<user>')
+def check(user):
+    users = interval.get_users()
+
+    if user in users:
+        return {user: (interval.check(user), interval.get_credits(user))}
+    else:
+        return {"error": "user not found"}
 
 
 # load the database when imported

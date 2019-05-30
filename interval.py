@@ -151,32 +151,15 @@ def check(user):
     """
     returns positive # of minutes remaining,
     0 if not in an active interval,
-    negative number of minutes to the end of current blackout
-
     """
 
     now_minute = tick(user)
-
-    """now = datetime.utcnow()
-
-                local_time_offset = get_time_offset(now)
-
-                now_minute = to_minutes(now.isoweekday() %
-                                        7, now.hour, now.minute)
-                now_minute += local_time_offset
-                now_minute %= WEEK"""
 
     remaining = 0
 
     for i_start, i_end in get_intervals(user):
         if i_start <= now_minute <= i_end:
             remaining = max(remaining, i_end - now_minute)
-
-    # todo: replace with the logic from get_intervals
-#    if remaining:
-#        for b_start, b_end in itertools.chain.from_iterable(BLACKOUTS[user]):
-#            if b_start <= now_minute <= b_end:
-#                return -1 * (b_end - now_minute)
 
     user_total = CREDITS.get(user, 0)
 
@@ -187,42 +170,49 @@ def check(user):
     return min(remaining, user_total)
 
 
-def tick(user):
-
-    activate(user)
-    # always remember to set inactive users to -1!
-
-    now = datetime.utcnow()
-    daily_topoff(now)
-
+def server_time(now):
     local_time_offset = get_time_offset(now)
     # server runs UTC, but the minute conversion is hard-coded to
     # a simplified version of Pacific time : -7 during the
     # PST interval, -8 the rest of the time
-    now_minute = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
+    now_minute = to_minutes(now.weekday() % 7, now.hour, now.minute)
     now_minute += local_time_offset
     now_minute %= WEEK
-
-    recent = ACTIVE[user]
-    if recent <= 0:
-        ACTIVE[user] = now_minute
-    else:
-
-        delta = now_minute - ACTIVE[user]
-        if delta < 0:
-            delta += WEEK
-
-        CREDITS[user] -= delta
-        CREDITS[user] = max(0, CREDITS[user])
-        ACTIVE[user] = now_minute
 
     return now_minute
 
 
-def activate(user):
-    for u in ACTIVE:
-        if ACTIVE[u] != user:
-            ACTIVE[u] = -1
+def tick(user):
+
+    now = datetime.utcnow()
+    daily_topoff(now)
+
+    now_minute = server_time(now)
+
+    recent = ACTIVE[user]
+    if recent == -1:
+        recent = now_minute
+
+    delta = now_minute - recent
+    print (now, from_minutes(now_minute), ACTIVE[user],
+           "delta", delta, "credits", CREDITS[user])
+
+    # wraparounds for normalized time
+    if delta < 0:
+        delta += WEEK
+
+    # assume longer interval =  dropped connection
+    # expect multiple polls per minute
+
+    if delta > 3:
+        delta = 0
+        print ("dropped connection")
+
+    CREDITS[user] -= delta
+    CREDITS[user] = max(0, CREDITS[user])
+
+    ACTIVE[user] = now_minute
+    return now_minute
 
 
 def daily_topoff(today_datetime):
@@ -235,7 +225,7 @@ def daily_topoff(today_datetime):
         next_day = datetime.utcfromtimestamp(d * 86400)
         print (">", next_day)
         local_time_offset = get_time_offset(next_day)
-        now_minute = to_minutes(next_day.isoweekday() %
+        now_minute = to_minutes(next_day.weekday() %
                                 7, next_day.hour, next_day.minute)
         now_minute += local_time_offset
         now_minute %= WEEK
@@ -247,10 +237,10 @@ def daily_topoff(today_datetime):
             print (">D>", daily, DAILY_BANK)
             CREDITS[u] += daily
 
-        if day_number == 0:
-            weekly = WEEKLY_BANK[u] or 0
-            print (">W>", weekly, WEEKLY_BANK)
-            CREDITS[u] += weekly
+            if day_number == 0:
+                weekly = WEEKLY_BANK[u] or 0
+                print (">W>", weekly, WEEKLY_BANK)
+                CREDITS[u] += weekly
 
             CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
 
@@ -302,6 +292,12 @@ def delete_user(user):
 
 
 def get_intervals(user):
+
+    print (
+        [
+            (from_minutes(s), from_minutes(e)) for s, e in BLACKOUTS[user]
+        ]
+    )
 
     ints = (k for k in INTERVALS[user])
     for b in BLACKOUTS[user]:
@@ -379,7 +375,7 @@ if __name__ == '__main__':
 
     pacific_time_offset = get_time_offset(now)
 
-    now_minute = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
+    now_minute = to_minutes(now.weekday() % 7, now.hour, now.minute)
 
     print ("UTC", now)
     print ("raw", now_minute)
@@ -389,7 +385,7 @@ if __name__ == '__main__':
     print ("pst", now_minute)
 
     now = datetime.now()
-    confirm = to_minutes(now.isoweekday() % 7, now.hour, now.minute)
+    confirm = to_minutes(now.weekday() % 7, now.hour, now.minute)
     print ("confirm", confirm)
     CAPS['nicky'] = 120
     CREDITS['nicky'] = 0
