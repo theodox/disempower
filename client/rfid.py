@@ -209,6 +209,7 @@ class PN532:
     def _wait_ready(self, timeout=1):
         """Poll PN532 if status byte is ready, up to `timeout` seconds"""
         status = bytearray(1)
+        expected = bytearray(b'\x01')
         timestamp = time.ticks_ms()
         deadline = time.ticks_add(timestamp, int(timeout * 1000))
 
@@ -217,18 +218,16 @@ class PN532:
                 self._i2c.recv(status, self.address)
                 if self.debug:
                     print ('wait_ready', status)
-                if status[0] == b'\x01':
+                if status == expected:
                     if self.debug:
                         print ("no longer busy")
                     return True
-                else:
-                    time.sleep(0.05)
+               
             except OSError:
                 if self.debug:
                     print ("OSError - reawaken")
-                self._wakeup()
-
-                continue
+                time.sleep(0.05)
+                
 
         return False
 
