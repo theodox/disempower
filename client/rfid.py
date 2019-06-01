@@ -155,13 +155,6 @@ NDEF_URIPREFIX_URN_EPC_RAW = const(0x21)
 NDEF_URIPREFIX_URN_EPC = const(0x22)
 NDEF_URIPREFIX_URN_NFC = const(0x23)
 
-_GPIO_VALIDATIONBIT = const(0x80)
-_GPIO_P30 = const(0)
-_GPIO_P31 = const(1)
-_GPIO_P32 = const(2)
-_GPIO_P33 = const(3)
-_GPIO_P34 = const(4)
-_GPIO_P35 = const(5)
 
 _ACK = b'\x00\x00\xFF\x00\xFF\x00'
 _FRAME_START = b'\x00\x00\xFF'
@@ -523,8 +516,6 @@ def test():
     return tester
 
 
-
-
 def test_read(pn532):
 
     pn532.SAM_configuration()
@@ -538,3 +529,41 @@ def test_read(pn532):
             print ("card: {}".format(binascii.hexlify(result)))
 
     print ("complete")
+
+
+def test_write(pn532):
+
+    pn532.SAM_configuration()
+
+    failsafe = 512
+    count = 0
+    while True and count < failsafe:
+        count += 1
+        result = pn532.read_passive_target()
+        if result:
+            print ("found card: {}".format(binascii.hexlify(result)))
+
+            if not pn532.mifare_classic_authenticate_block(result, 4, MIFARE_CMD_AUTH_B,
+                                                           bytearray([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])):
+                print('Failed to authenticate block 4!')
+                continue
+
+            data = pn532.mifare_classic_read_block(4)
+
+            if not data:
+                print ("no data")
+            else:
+                print ('Read block 4: 0x{0}'.format(binascii.hexlify(data[:4])))
+
+            feedbeef = bytearray(16)
+            feedbeef[0] = 0xFE
+            feedbeef[1] = 0xED
+            feedbeef[2] = 0xBE
+            feedbeef[3] = 0xEF
+            # # Write entire 16 byte block.
+            print (pn532.mifare_classic_write_block(4, feedbeef))
+            print ("wrote block")
+            break
+    # print('Wrote to block 4, exiting program!')
+    # # Exit the program to prevent continually writing to card.
+    # sys.exit(0)
