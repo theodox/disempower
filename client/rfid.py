@@ -553,13 +553,12 @@ def test_write(pn532):
             if not data:
                 print ("no data")
             else:
-                print ('Read block 4: 0x{0}'.format(binascii.hexlify(data[:4])))
+                print ('Read block 4: {}'.format(bytes(data).decode('utf-8')))
 
-            feedbeef = bytearray(16)
-            feedbeef[0] = 0xFE
-            feedbeef[1] = 0xED
-            feedbeef[2] = 0xBE
-            feedbeef[3] = 0xEF
+            feedbeef = bytearray('nicky'.encode('utf-8'))
+            diff = bytearray(16 - len(feedbeef))
+            feedbeef.extend(diff)
+
             # # Write entire 16 byte block.
             print (pn532.mifare_classic_write_block(4, feedbeef))
             print ("wrote block")
