@@ -51,6 +51,8 @@ from micropython import const
 from pyb import I2C
 from machine import Pin
 
+import binascii
+
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_PN532.git"
 
@@ -204,8 +206,6 @@ class PN532:
         self._wakeup()
         assert self.address in self._i2c.scan()
 
- 
-
     def _wait_ready(self, timeout=1):
         """Poll PN532 if status byte is ready, up to `timeout` seconds"""
         status = bytearray(1)
@@ -222,12 +222,11 @@ class PN532:
                     if self.debug:
                         print ("no longer busy")
                     return True
-               
+
             except OSError:
                 if self.debug:
                     print ("OSError - reawaken")
                 time.sleep(0.05)
-                
 
         return False
 
@@ -522,3 +521,20 @@ def test():
     addy = 36
     tester = PN532(bus, addy, req=req, debug=True)
     return tester
+
+
+
+
+def test_read(pn532):
+
+    pn532.SAM_configuration()
+
+    failsafe = 512
+    count = 0
+    while True and count < failsafe:
+        count += 1
+        result = pn532.read_passive_target()
+        if result:
+            print ("card: {}".format(binascii.hexlify(result)))
+
+    print ("complete")
