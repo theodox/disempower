@@ -1,3 +1,10 @@
+"""
+this file originally from the micropython-lib project by pfalcon under the MIT license
+source:  https://github.com/micropython/micropython-lib/blob/master/urequests/urequests.py
+license : https://github.com/micropython/micropython-lib/blob/master/LICENSE
+
+"""
+
 import usocket
 
 class Response:
