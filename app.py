@@ -285,9 +285,9 @@ def check(user):
     users = interval.get_users()
 
     if user in users:
-        return {user: (interval.check(user), interval.get_credits(user))}
+        return {'remaining': interval.check(user), 'total': interval.get_credits(user)}
     else:
-        return {"error": "user not found"}
+        return {'remaining': -1, 'total': -1}
 
 
 # load the database when imported
