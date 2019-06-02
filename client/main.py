@@ -4,9 +4,8 @@ from machine import I2C, Pin
 import rfid
 import time
 import network
-import socket
-import json
 import urequests as requests
+import sys
 
 """import logging
 logger = logging.getLogger('disempower')
@@ -34,75 +33,89 @@ def main_loop():
 
     READER.SAM_configuration()
 
-    failsafe = 512
-    count = 0
-
     LOGGED_IN = None
 
     AVAIL, TOTAL = 0, 0
 
-    GREEH = Pin("LED_GREEN")
+    GREEN = Pin("LED_GREEN")
     RED = Pin("LED_RED")
+    BLUE = Pin("LED_BLUE")
 
-    while True and count < failsafe:
-        count += 1
+    LOOP_TIME = 300
+    CARD_TIME = 2000
+    WEB_TIME = 5000
 
-        GREEH.value(AVAIL == 0)
-        RED.value(count % 2 == 0)
+    now = time.ticks_ms()
+    NEXT_TICK = now
+    NEXT_CARD = now
+    NEXT_WEB = now
 
-        try:
-            result = READER.read_user_id(4)
-        except RuntimeError:
-            print ("CARD READ ERROR")
-            result = None
+    NEXT_CARD = NEXT_WEB = time.ticks_ms()
 
-        if result is None:
-            if count % 8 == 0 and LOGGED_IN is not None:
+    BLINK = 1
 
-                address = ('192.168.0.6', 8080)
+    while True:
 
-                sock = socket.socket()
-                sock.connect(address)
+        frame_time = time.ticks_ms()
 
-                req = 'GET /check/{} HTTP/1.1\r\nHost = "theodox.pythonanywhere.com"\r\n'.format(LOGGED_IN)
-
-                sock.write(req.encode('utf-8'))
-                response = sock.read()
-                if response:
-                    json_response = response.splitlines()[-1]
-                    try:
-                        blob = json.loads(json_response)
-                    except:
-                        blob = {}
-                    AVAIL, TOTAL = blob.get(LOGGED_IN, (0, 0))
-
-                    print ("available", AVAIL, "total", TOTAL)
-
-            time.sleep(0.2)
+        if time.ticks_diff(frame_time, NEXT_TICK) < 0:
             continue
 
-        if LOGGED_IN == result:
-            print (LOGGED_IN, "LOG OUT")
-            LOGGED_IN = None
-            AVAIL = 0
-            TOTAL = 0
+        NEXT_TICK = time.ticks_add(frame_time, LOOP_TIME)
 
-        else:
-            print (LOGGED_IN, "LOG OUT")
-            print (result, "LOG IN", len(result))
-            LOGGED_IN = result
-            AVAIL = 0
-            TOTAL = 0
+        GREEN.value(AVAIL == 0)
+        BLUE.value(LOGGED_IN is None)
+        BLINK = not BLINK
+        RED.value(BLINK)
+        print (AVAIL, TOTAL)
 
-        time.sleep(4.0)
+        if time.ticks_diff(NEXT_CARD, frame_time) < 0:
+
+            try:
+                result = READER.read_user_id(4)
+                NEXT_CARD = time.ticks_add(frame_time, CARD_TIME)
+            except RuntimeError as e:
+                print ("CARD READ ERROR")
+                print (e)
+                result = None
+
+            if result:
+
+                if LOGGED_IN == result:
+                    print (LOGGED_IN, "LOG OUT")
+                    LOGGED_IN = None
+                    AVAIL = 0
+                    TOTAL = 0
+
+                else:
+                    if LOGGED_IN:
+                        print (LOGGED_IN, "LOG OUT")
+                    print (result, "LOG IN", len(result))
+                    LOGGED_IN = result
+                    AVAIL = 0
+                    TOTAL = 0
+
+        if time.ticks_diff(NEXT_WEB, frame_time) < 0:
+
+            if LOGGED_IN is not None and len(LOGGED_IN):
+                r, g, b = RED.value, GREEN.value, BLUE.value
+                RED.value(1)
+                GREEN.value(1)
+                BLUE.value(1)
+
+                req = 'http://theodox.pythonanywhere.com/check/{}'.format(LOGGED_IN)
+                info = requests.get(req).json()
+                print (">>>", info)
+                AVAIL = info['available']
+                TOTAL = info['total']
+                NEXT_WEB = time.ticks_add(frame_time, WEB_TIME)
+
+                RED.value(r)
+                GREEN.value(g)
+                BLUE.value(b)
 
     print ("LOOP COMPLETE")
 
-
-REQ = '''GET /check/nicky HTTP/1.1
-Host: theodox.pythonanywhere.com
-Content-Type: text/html
-'''.encode('utf-8')
 
 if __name__ == '__main__':
 
@@ -110,19 +123,14 @@ if __name__ == '__main__':
     nic.active(True)
     nic.connect('simonides', '300spartans!')
 
-    r = requests.get("http://theodox.pythonanywhere.com/check/nicky")
-    print(r.json())
-    
-    nic.disconnect()
-
-"""
-
+    print("waiitng for network")
     time.sleep(4.0)
 
     try:
         main_loop()
     except Exception as e:
-        logger.exception(e)
+        sys.print_exception(e)
+        with open("crashlog.txt", 'wt') as crashlog:
+            sys.print_exception(e, crashlog)
     finally:
         nic.disconnect()
-"""
