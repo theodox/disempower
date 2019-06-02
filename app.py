@@ -281,6 +281,7 @@ def user_page(user):
 
 @app.route('/check/<user>')
 def check(user):
+
     users = interval.get_users()
 
     if user in users:

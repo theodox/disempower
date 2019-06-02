@@ -18,8 +18,10 @@
 the library uses machine.I2C not pyb.I2C
 
 
-* soldered NFC read gets power, is not visible to I2C scans.  Checked with both kinds of I2C on both pyboards
-
+* using pyb.i2c I can see the NFC reader after adding pull-up resistors (brown-black-orange-gold on the scl and sda lines)
+* Still can't get reliable read-writes, i may have messed up while trying to accomodate the micropython syntax
+* 
+ 
 * PyD connects to wifi properly, but spams that annoying error message
 
 * cleaning the soldering iron tip REALLY MATTERS.  Using the wire brush on the dremel seems to work very well

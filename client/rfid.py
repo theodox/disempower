@@ -163,7 +163,7 @@ _FRAME_START = b'\x00\x00\xFF'
 def _reset(pin):
     """Perform a hardware reset toggle"""
 
-    #pin.direction = Direction.OUTPUT
+    # pin.direction = Direction.OUTPUT
 
     pin.value(True)
     time.sleep(0.1)
@@ -232,8 +232,8 @@ class PN532:
         # with self._i2c as i2c:
         #    i2c.readinto(frame, end=1)  # read status byte!
         # if frame[0] != 0x01:
-        ##    print ("got", str(frame))
-        #raise BusyError
+        # print ("got", str(frame))
+        # raise BusyError
 
         if self.debug:
             print("Reading: ", [hex(i) for i in frame])
@@ -506,6 +506,28 @@ class PN532:
         not read then None will be returned.
         """
         return self.mifare_classic_read_block(block_number)[0:4]  # only 4 bytes per page'
+
+    def read_user_id(self, block=4):
+
+        uid = self.read_passive_target()
+        if not uid:
+            return None
+
+        print ("card: {}".format(binascii.hexlify(uid)))
+
+
+        auth = self.mifare_classic_authenticate_block(uid, block,
+                                                      MIFARE_CMD_AUTH_B,
+                                                      bytearray([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]))
+        if not auth:
+            print('Failed to authenticate block 4!')
+
+        data = self.mifare_classic_read_block(block)
+        if not data:
+            return None
+        stringname =  bytes(data).decode('utf-8')
+        valid_chars = [i for i in stringname if i not in ('\x00', '')]
+        return ''.join(valid_chars)
 
 
 def test():
