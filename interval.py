@@ -225,7 +225,7 @@ def daily_topoff(today_datetime):
 
     for d in range(LAST_TOPOFF + 1, current_day_serial + 1):
         next_day = datetime.utcfromtimestamp(d * 86400)
-        logger.info(">", next_day)
+        logger.info(str(next_day))
         local_time_offset = get_time_offset(next_day)
         now_minute = to_minutes(next_day.weekday() %
                                 7, next_day.hour, next_day.minute)
