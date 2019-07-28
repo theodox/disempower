@@ -294,4 +294,4 @@ def check(user):
 try:
     interval.load(save_file)
 except IOError:
-    print ("no save file")
+    logger.warning ("no save file")

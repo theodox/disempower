@@ -4,6 +4,8 @@ import itertools
 import pickle
 import time
 
+import logging
+logger = logging.getLogger("disempower.interval")
 
 CREDITS = defaultdict(int)      # per-user bank
 INTERVALS = defaultdict(list)   # per-user allowable times
@@ -194,8 +196,8 @@ def tick(user):
         recent = now_minute
 
     delta = now_minute - recent
-    print (now, from_minutes(now_minute), ACTIVE[user],
-           "delta", delta, "credits", CREDITS[user])
+    msg = "time: {}, {}, {}, {}, 'delta', {}, 'credits' {} "
+    logger.info(msg.format(now, from_minutes(now_minute), ACTIVE[user], delta, CREDITS[user]))
 
     # wraparounds for normalized time
     if delta < 0:
@@ -206,7 +208,7 @@ def tick(user):
 
     if delta > 3:
         delta = 0
-        print ("dropped connection")
+        logger.warning("dropped connection")
 
     CREDITS[user] -= delta
     CREDITS[user] = max(0, CREDITS[user])
@@ -223,23 +225,23 @@ def daily_topoff(today_datetime):
 
     for d in range(LAST_TOPOFF + 1, current_day_serial + 1):
         next_day = datetime.utcfromtimestamp(d * 86400)
-        print (">", next_day)
+        logger.info(">", next_day)
         local_time_offset = get_time_offset(next_day)
         now_minute = to_minutes(next_day.weekday() %
                                 7, next_day.hour, next_day.minute)
         now_minute += local_time_offset
         now_minute %= WEEK
         day_number = now_minute // DAY
-        print ("topoff", d, day_number)
+        logger.info("topoff {} {}".format(d, day_number))
 
         for u in DAILY_BANK:
             daily = DAILY_BANK[u] or 0
-            print (">D>", daily, DAILY_BANK)
+            logger.info(">D>", daily, DAILY_BANK)
             CREDITS[u] += daily
 
             if day_number == 0:
                 weekly = WEEKLY_BANK[u] or 0
-                print (">W>", weekly, WEEKLY_BANK)
+                logger.info(">W>", weekly, WEEKLY_BANK)
                 CREDITS[u] += weekly
 
             CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
@@ -293,11 +295,7 @@ def delete_user(user):
 
 def get_intervals(user):
 
-    print (
-        [
-            (from_minutes(s), from_minutes(e)) for s, e in BLACKOUTS[user]
-        ]
-    )
+    logger.debug(str([(from_minutes(s), from_minutes(e)) for s, e in BLACKOUTS[user]]))
 
     ints = (k for k in INTERVALS[user])
     for b in BLACKOUTS[user]:
