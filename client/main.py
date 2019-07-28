@@ -93,6 +93,7 @@ def main_loop():
 
         if time.ticks_diff(NEXT_CARD, frame_time) < 0:
 
+            result = None
             try:
                 result = READER.read_user_id(4)
                 NEXT_CARD = time.ticks_add(frame_time, CARD_TIME)
@@ -103,6 +104,15 @@ def main_loop():
                 DISPLAY.fill(0)
                 DISPLAY.text("Could not read card", 8, 12)
                 DISPLAY.show()
+                READER._wakeup()
+
+            except OSError as e:
+                print ("read timeout")
+                DISPLAY.fill(0)
+                DISPLAY.text("Card reader timeout", 8, 12)
+                DISPLAY.show()
+                READER._wakeup()
+
 
             if result:
 
