@@ -196,7 +196,7 @@ def tick(user):
         recent = now_minute
 
     delta = now_minute - recent
-    msg = "time: {}, {}, {}, {}, 'delta', {}, 'credits' {} "
+    msg = "time: {}, {}, {},  'delta', {}, 'credits' {} "
     logger.info(msg.format(now, from_minutes(now_minute), ACTIVE[user], delta, CREDITS[user]))
 
     # wraparounds for normalized time
