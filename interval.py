@@ -236,12 +236,12 @@ def daily_topoff(today_datetime):
 
         for u in DAILY_BANK:
             daily = DAILY_BANK[u] or 0
-            logger.info(">D>", daily, DAILY_BANK)
+            logger.info('daily {}: {}'.format(daily, DAILY_BANK))
             CREDITS[u] += daily
 
             if day_number == 0:
                 weekly = WEEKLY_BANK[u] or 0
-                logger.info(">W>", weekly, WEEKLY_BANK)
+                logger.info('weekly {}: {}'.format(weekly, WEEKLY_BANK))
                 CREDITS[u] += weekly
 
             CREDITS[u] = min(CREDITS[u], CAPS.get(u, 180))
@@ -289,7 +289,7 @@ def delete_user(user):
     for each_dict in (INTERVALS, CREDITS, WEEKLY_BANK, DAILY_BANK, CAPS, BLACKOUTS):
         try:
             each_dict.pop(user)
-        except:
+        except KeyError:
             pass
 
 
