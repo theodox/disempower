@@ -1,0 +1,37 @@
+.pwdform {
+    width: 75%
+}
+
+#loginform{
+    width: 100%;
+    margin: 16px auto;
+    overflow: hidden;
+    padding: 16px 0;
+    align-items: center;
+    justify-content: space-around;
+    display: flex;
+    float: none;
+}
+
+.cal {
+    width: 100%
+    margin: 4px;
+    padding: 4px;
+    align-items: center;
+    justify-content: space-around;
+    display: flex;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+}
+
+.creditdiv {
+    width: 50%;
+}
+
+.fw {
+    display: inline-block;
+    width: 64px;
+}
