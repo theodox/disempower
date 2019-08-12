@@ -6,6 +6,7 @@ import time
 import network
 import urequests as requests
 import sys
+import pyb
 
 """import logging
 logger = logging.getLogger('disempower')
@@ -16,6 +17,7 @@ fileh = logging.FileHandler('disempower.log')
 fileh.setLevel(logging.CRITICAL)
 """
 
+POWER = pyb.Pin('X1', Pin.OUT_PP)
 
 def make_display():
     sda = Pin.board.Y10
@@ -36,7 +38,15 @@ def main_loop():
     DISPLAY.text("starting...", 8, 12, 0)
     DISPLAY.show()
 
-    READER = rfid.PN532()
+    try:
+
+        READER = rfid.PN532()
+    except AssertionError:
+        DISPLAY.fill(0)
+        DISPLAY.rect(1, 1, 126, 30, 1)
+        DISPLAY.text("no card reader", 8,12, 1)
+        DISPLAY.show()
+        return
 
     READER.SAM_configuration()
 
@@ -85,9 +95,10 @@ def main_loop():
             h = int(32 * avail)
             top = 32 - h
             DISPLAY.fill_rect(100, top, 28, h, 1)
-
+            POWER.high()
         else:
             DISPLAY.text("Logged out", 8, 12)
+            POWER.low()
 
         DISPLAY.show()
 
@@ -112,7 +123,6 @@ def main_loop():
                 DISPLAY.text("Card reader timeout", 8, 12)
                 DISPLAY.show()
                 READER._wakeup()
-
 
             if result:
 
