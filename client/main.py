@@ -82,7 +82,9 @@ def main_loop():
 
     def display_logged_out():
         DISPLAY.text("Logged out", 8, 12)
-        POWER.low()
+        RED.value(0)
+        GREEN.value(0)
+        BLUE.value(0)
 
     def display_logged_in():
         DISPLAY.fill(0)
@@ -121,6 +123,7 @@ def main_loop():
                 POWER.low()
         else:
             display_logged_out()
+            POWER.low()
 
         DISPLAY.show()
 
