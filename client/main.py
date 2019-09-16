@@ -112,7 +112,7 @@ def main_loop():
 #
         DISPLAY.fill(0)
         if LOGGED_IN:
-            if REMAIN > 0.5:
+            if REMAIN > 0.2:
                 display_logged_in()
                 POWER.high()
             else:
@@ -160,7 +160,7 @@ def main_loop():
                         print(LOGGED_IN, "LOG OUT")
                     print(result, "LOG IN", len(result))
                     LOGGED_IN = result
-                    REMAIN = 0
+                    REMAIN = 0.25
                     TOTAL = 0
                     NEXT_WEB = frame_time
 
