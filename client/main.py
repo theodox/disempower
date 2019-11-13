@@ -178,18 +178,29 @@ def main_loop():
                 GREEN.value(1)
                 BLUE.value(1)
 
-                req = 'http://theodox.pythonanywhere.com/check/{}'.format(LOGGED_IN)
-                info = requests.get(req).json()
-                REMAIN = info['remaining']
-                TOTAL = info['total']
-                NEXT_WEB = time.ticks_add(frame_time, WEB_TIME)
+                try:
+                    req = 'http://theodox.pythonanywhere.com/check/{}'.format(LOGGED_IN)
+                    info = requests.get(req).json()
+                    REMAIN = info['remaining']
+                    TOTAL = info['total']
+                    NEXT_WEB = time.ticks_add(frame_time, WEB_TIME)
 
-                RED.value(r)
-                GREEN.value(g)
-                BLUE.value(b)
+                    RED.value(r)
+                    GREEN.value(g)
+                    BLUE.value(b)
 
-                DISPLAY.fill(0)
-                DISPLAY.show()
+                    DISPLAY.fill(0)
+                    DISPLAY.show()
+                except Exception as e:
+                    exc_value = str(type(e))
+                    RED.value(1)
+                    GREEN.value(0)
+                    BLUE.value(0)
+
+                    DISPLAY.fill(1)
+                    DISPLAY.text(exc_value , 8, 12, 0)
+                    DISPLAY.show()
+
 
     print("LOOP COMPLETE")
 
