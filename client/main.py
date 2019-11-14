@@ -7,7 +7,7 @@ import network
 import urequests as requests
 import sys
 import pyb
-
+import gc
 """import logging
 logger = logging.getLogger('disempower')
 logger.setLevel(logging.DEBUG)
@@ -180,27 +180,37 @@ def main_loop():
 
                 try:
                     req = 'http://theodox.pythonanywhere.com/check/{}'.format(LOGGED_IN)
-                    info = requests.get(req).json()
+
+                    response = requests.get(req)
+                    info = response.json()
                     REMAIN = info['remaining']
                     TOTAL = info['total']
                     NEXT_WEB = time.ticks_add(frame_time, WEB_TIME)
 
-                    RED.value(r)
-                    GREEN.value(g)
-                    BLUE.value(b)
+                    RED.value(0)
+                    GREEN.value(0)
+                    BLUE.value(1)
 
                     DISPLAY.fill(0)
                     DISPLAY.show()
-                except Exception as e:
-                    exc_value = str(type(e))
+                except OSError:
+                    error = "request timeout"
                     RED.value(1)
                     GREEN.value(0)
                     BLUE.value(0)
+                    print(error)
 
-                    DISPLAY.fill(1)
-                    DISPLAY.text(exc_value , 8, 12, 0)
+                    DISPLAY.fill(0)
+                    DISPLAY.text(error, 8, 12, 1)
                     DISPLAY.show()
+                    LOGGED_IN = None
+                    REMAIN = 0
+                    TOTAL = 0
+                    time.sleep(1)
+                finally:
+                    del response
 
+        gc.collect()
 
     print("LOOP COMPLETE")
 

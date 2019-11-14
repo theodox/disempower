@@ -1,10 +1,3 @@
-"""
-this file originally from the micropython-lib project by pfalcon under the MIT license
-source:  https://github.com/micropython/micropython-lib/blob/master/urequests/urequests.py
-license : https://github.com/micropython/micropython-lib/blob/master/LICENSE
-
-"""
-
 import usocket
 
 class Response:
@@ -102,7 +95,8 @@ def request(method, url, data=None, json=None, headers={}, stream=None):
                     raise ValueError("Unsupported " + l)
             elif l.startswith(b"Location:") and not 200 <= status <= 299:
                 raise NotImplementedError("Redirects not yet supported")
-    except OSError:
+    except OSError as e:
+        print ("socket eerror", e.args[0])
         s.close()
         raise
 
