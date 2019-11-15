@@ -16,9 +16,23 @@ logger.addHandler(logging.StreamHandler())
 fileh = logging.FileHandler('disempower.log')
 fileh.setLevel(logging.CRITICAL)
 """
+# soft reset breakout
+ABORT = False
+ABORT_SWITCH = pyb.Switch()
+# pins
+
+GREEN = Pin("LED_GREEN")
+RED = Pin("LED_RED")
+BLUE = Pin("LED_BLUE")
 
 POWER = pyb.Pin('X1', Pin.OUT_PP)
+DISPLAY = None
 
+
+def set_led(r, g, b):
+    RED.value(r),
+    GREEN.value(g),
+    BLUE.value(b)
 
 def make_display():
     sda = Pin.board.Y10
@@ -29,36 +43,29 @@ def make_display():
 
     return display
 
-
-def main_loop():
-    print("starting main loop")
-
-    DISPLAY = make_display()
-    DISPLAY.poweron()
-    DISPLAY.fill(1)
-    DISPLAY.text("starting...", 8, 12, 0)
+def text_message(text, background = 0):
+    DISPLAY.fill(background)
+    DISPLAY.text(text, 8, 12, int(not background))
     DISPLAY.show()
 
-    try:
 
+def main_loop():
+    global DISPLAY
+    print("starting main loop")
+
+   
+    text_message("starting...", 1)
+
+    try:
         READER = rfid.PN532()
+        READER.SAM_configuration()
     except AssertionError:
-        DISPLAY.fill(0)
-        DISPLAY.rect(1, 1, 126, 30, 1)
-        DISPLAY.text("no card reader", 8, 12, 1)
-        DISPLAY.show()
+        text_message("no card reader", 0)
         return
 
-    READER.SAM_configuration()
 
     LOGGED_IN = None
-
     REMAIN, TOTAL = 0, 0
-
-    GREEN = Pin("LED_GREEN")
-    RED = Pin("LED_RED")
-    BLUE = Pin("LED_BLUE")
-
     LOOP_TIME = 300
     CARD_TIME = 2000
     WEB_TIME = 12000
@@ -73,18 +80,13 @@ def main_loop():
     BLINK = 1
 
     def display_finished():
-        DISPLAY.fill(0)
-        DISPLAY.text("Out of time", 8, 12)
+        text_message("Out of time", 0)
         POWER.low()
-        GREEN.value(0)
-        BLUE.value(0)
-        RED.value(1)
+        set_led(1,0,0)
 
     def display_logged_out():
-        DISPLAY.text("Logged out", 8, 12)
-        RED.value(0)
-        GREEN.value(0)
-        BLUE.value(0)
+        text_message("Logged Out", 0)
+        set_led(0,0,0)
 
     def display_logged_in():
         DISPLAY.fill(0)
@@ -96,7 +98,7 @@ def main_loop():
         top = 32 - h
         DISPLAY.fill_rect(100, top, 28, h, 1)
 
-    while True:
+    while not ABORT:
 
         frame_time = time.ticks_ms()
 
@@ -109,7 +111,7 @@ def main_loop():
         BLUE.value(LOGGED_IN is None)
         BLINK = not BLINK
         RED.value(BLINK)
-#
+
         DISPLAY.fill(0)
         if LOGGED_IN:
             if REMAIN > 0.2:
@@ -137,15 +139,11 @@ def main_loop():
                 print("CARD READ ERROR")
                 print(e)
                 result = None
-                DISPLAY.fill(0)
-                DISPLAY.text("Could not read card", 8, 12)
-                DISPLAY.show()
+                text_message("Cannot read card", 0)
                 READER._wakeup()
             except OSError:
                 print("read timeout")
-                DISPLAY.fill(0)
-                DISPLAY.text("Card reader timeout", 8, 12)
-                DISPLAY.show()
+                text_message("Card read timeout", 0)
                 READER._wakeup()
 
             if result:
@@ -168,61 +166,99 @@ def main_loop():
 
             if LOGGED_IN is not None and len(LOGGED_IN):
 
+                req = 'http://theodox.pythonanywhere.com/check/{}'.format(LOGGED_IN)
+                set_led(0,0,0)
                 print("checking status")
-                DISPLAY.fill(1)
-                DISPLAY.text("checking", 8, 12, 0)
-                DISPLAY.show()
+                text_message("Checking...", 1)
 
-                r, g, b = RED.value, GREEN.value, BLUE.value
-                RED.value(1)
-                GREEN.value(1)
-                BLUE.value(1)
-
+                response = None
                 try:
-                    req = 'http://theodox.pythonanywhere.com/check/{}'.format(LOGGED_IN)
 
                     response = requests.get(req)
                     info = response.json()
-                    REMAIN = info['remaining']
-                    TOTAL = info['total']
-                    NEXT_WEB = time.ticks_add(frame_time, WEB_TIME)
-
-                    RED.value(0)
-                    GREEN.value(0)
-                    BLUE.value(1)
-
-                    DISPLAY.fill(0)
-                    DISPLAY.show()
                 except OSError:
                     error = "request timeout"
-                    RED.value(1)
-                    GREEN.value(0)
-                    BLUE.value(0)
+                    
+                    set_led(1,0,0)
                     print(error)
 
-                    DISPLAY.fill(0)
-                    DISPLAY.text(error, 8, 12, 1)
-                    DISPLAY.show()
+                    text_message("request timeout")
                     LOGGED_IN = None
                     REMAIN = 0
                     TOTAL = 0
                     time.sleep(1)
+                else:
+                    set_led(0,1,0)
+
+                    REMAIN = info['remaining']
+                    TOTAL = info['total']
+                    NEXT_WEB = time.ticks_add(frame_time, WEB_TIME)
+
+                    set_led(0,0,1)
+
+                    DISPLAY.fill(0)
+                    DISPLAY.show()
+
+
                 finally:
                     del response
 
+                    
         gc.collect()
 
     print("LOOP COMPLETE")
 
 
 if __name__ == '__main__':
+    set_led(0,1,1)
+    status_display = None
+    failsafe = 10
+    counter = 0
+    while not status_display and  counter <failsafe:
+        try:
+            status_display = make_display()
+        except OSError:
+            time.sleep(0.25)
+            counter +=1
+
+    if not status_display:
+        print ("could not find display")
+
+    DISPLAY = status_display
+    set_led(0,0.5,0)
+
+    print (status_display)
+    status_display.poweron()
+    
 
     nic = network.WLAN(network.STA_IF)
     nic.active(True)
     nic.connect('simonides', '300spartans!')
 
-    print("waiitng for network")
-    time.sleep(4.0)
+    text_message("wait for WLAN")
+
+    set_led(0,0.5, 0.5)
+    connected = False
+    for n in range (400):
+        connected = nic.isconnected()
+        if connected:
+            status = nic.ifconfig()
+            text_message(status[0], 0)
+            break
+
+    set_led(0,1,0)
+
+    time.sleep(2.0)
+
+    def abort_handler():
+        global ABORT
+        RED.value(1)
+        BLUE.value(0)
+        GREEN.value(0)
+        text_message("shut down")
+        ABORT = True
+
+    ABORT_SWITCH.callback(abort_handler)
 
     try:
         main_loop()
@@ -230,5 +266,7 @@ if __name__ == '__main__':
         sys.print_exception(e)
         with open("crashlog.txt", 'wt') as crashlog:
             sys.print_exception(e, crashlog)
+        text_message(str(e)[7:-1], 0)
+
     finally:
         nic.disconnect()
